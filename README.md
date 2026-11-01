@@ -67,15 +67,13 @@ Mode demo: tambahkan `--dart-define=DEMO=true`.
 Live di **https://tokogue-sigma.vercel.app** (project Vercel `tokogue`). Buka di Chrome HP →
 menu ⋮ → **Tambahkan ke layar utama**.
 
-Update setelah ada perubahan kode:
+Deploy otomatis: setiap push ke branch `main` di GitHub
+(`FaizRamadhannn/tokogue`) langsung di-build dan di-deploy oleh Vercel. Cara build-nya
+(pasang Flutter 3.47.8 lalu `flutter build web`) diatur di `vercel.json`.
 
 ```bash
-flutter build web && cd build/web && npx --yes vercel@64.1.0 deploy --prod --yes
+git add -A && git commit -m "pesan perubahan" && git push
 ```
-
-Catatan: deploy dari folder `build/web` akan membuat project Vercel bernama `web`. Supaya
-masuk ke project `tokogue`, sekali saja jalankan `npx vercel@64.1.0 link --project tokogue`
-di dalam `build/web` sebelum deploy.
 
 ## Tes
 
