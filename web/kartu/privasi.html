@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kebijakan Privasi · Kartu Loyalitas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f6efe4; --surface: #fffaf2; --line: #e8dccb; --ink: #1c1210; --muted: #75645a; --red: #c8231c; --red-deep: #8f130e; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Plus Jakarta Sans", system-ui, sans-serif; font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  main { max-width: 680px; margin: 0 auto; padding: 32px 16px 64px; }
+  a { color: var(--red-deep); font-weight: 600; }
+  .back { display: inline-block; margin-bottom: 20px; font-size: 14px; }
+  h1 { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: clamp(28px, 6vw, 38px); letter-spacing: -0.03em; line-height: 1.05; margin: 0 0 8px; }
+  .meta { color: var(--muted); font-size: 14px; margin: 0 0 28px; }
+  section { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; margin-bottom: 12px; }
+  h2 { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 18px; letter-spacing: -0.02em; margin: 0 0 6px; }
+  p { margin: 0 0 8px; }
+  p:last-child, ul:last-child { margin-bottom: 0; }
+  ul { margin: 0 0 8px; padding-left: 20px; }
+  li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="./">← Kembali ke kartu</a>
+  <h1>Kebijakan Privasi</h1>
+  <p class="meta">Program member <b class="store">toko ini</b> · Berlaku sejak 3 November 2026</p>
+
+  <section>
+    <h2>Data yang kami simpan</h2>
+    <ul>
+      <li><b>Nama</b> dan <b>nomor HP</b> yang kamu isi waktu daftar.</li>
+      <li><b>Stempel, hadiah yang ditukar, dan riwayat kunjungan</b>: tanggal datang dan menu yang kamu pesan, dicatat kasir waktu memberi stempel.</li>
+      <li>Waktu kamu menyetujui kebijakan ini.</li>
+    </ul>
+    <p>Kami tidak meminta alamat, email, KTP, data pembayaran, atau lokasi.</p>
+  </section>
+
+  <section>
+    <h2>Untuk apa datanya dipakai</h2>
+    <ul>
+      <li>Menjalankan kartu member: menghitung stempel dan hadiah.</li>
+      <li>Memastikan satu nomor HP cuma punya satu kartu.</li>
+      <li>Membantu <span class="store">toko</span> memahami menu favorit dan seberapa sering pelanggan datang, supaya layanan dan promo lebih pas.</li>
+    </ul>
+    <p>Data kamu <b>tidak dijual</b> dan <b>tidak dibagikan</b> ke pihak lain untuk iklan.</p>
+  </section>
+
+  <section>
+    <h2>Siapa yang bisa melihat</h2>
+    <ul>
+      <li><b>Kasir</b>: hanya nama dan jumlah stempel, waktu memindai kartumu.</li>
+      <li><b>Pengelola toko (atasan)</b>: nama, nomor HP, dan riwayat kunjungan, untuk laporan pelanggan.</li>
+      <li><b>Penyedia server</b>: data disimpan di layanan cloud Supabase dan hanya diproses untuk menjalankan aplikasi ini.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Berapa lama disimpan</h2>
+    <p>Selama kamu masih jadi member. Kalau kamu menghapus kartu, semua data di atas ikut dihapus permanen.</p>
+  </section>
+
+  <section>
+    <h2>Hak kamu</h2>
+    <p>Sesuai UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi, kamu berhak:</p>
+    <ul>
+      <li><b>Melihat</b> data kartumu: buka kartumu kapan saja lewat link kartu.</li>
+      <li><b>Memperbaiki</b> nama atau nomor HP: minta ke kasir.</li>
+      <li><b>Menghapus</b> semua datamu: tekan <b>Hapus kartu & data saya</b> di halaman kartu, atau minta ke kasir.</li>
+      <li><b>Menarik persetujuan</b>: caranya sama dengan menghapus kartu.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Pertanyaan</h2>
+    <p>Hubungi kasir atau pengelola <span class="store">toko</span> langsung di outlet.</p>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+// Nama toko diambil dari aturan program (data publik).
+(async () => {
+  try {
+    const sb = window.supabase.createClient("https://sinxdbpbmodmtxzphgyx.supabase.co", "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC");
+    const { data } = await sb.from("loyalty_settings").select("store").eq("id", 1).single();
+    if (data?.store) document.querySelectorAll(".store").forEach((el) => (el.textContent = data.store));
+  } catch {}
+})();
+</script>
+</body>
+</html>

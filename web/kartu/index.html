@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kartu Loyalitas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" defer></script>
+<style>
+  :root {
+    --bg: #f6efe4;
+    --surface: #fffaf2;
+    --line: #e8dccb;
+    --ink: #1c1210;
+    --muted: #75645a;
+    --red: #c8231c;
+    --red-deep: #8f130e;
+    --mustard: #f4b223;
+    --cream: #fff3dc;
+    --green: #1f7a4a;
+    --radius: 18px;
+    --display: "Bricolage Grotesque", system-ui, sans-serif;
+    --body: "Plus Jakarta Sans", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+
+  /* ---------- top bar ---------- */
+  .top {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .top-inner {
+    max-width: 1080px; margin: 0 auto; padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 800; font-size: 18px; letter-spacing: -0.02em; }
+  .brand-mark { width: 32px; height: 32px; border-radius: 10px; background: var(--red); display: grid; place-items: center; }
+  .tabs { display: flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+  .tab { border: 0; background: transparent; padding: 8px 14px; border-radius: 999px; font-weight: 600; font-size: 14px; color: var(--muted); }
+  .tab[aria-selected="true"] { background: var(--ink); color: #fff; }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 24px 16px 64px; }
+  [hidden] { display: none !important; }
+
+  /* ---------- customer view ---------- */
+  .customer { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 40px; align-items: start; }
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 18px; padding-top: 8px; }
+  .hello { text-align: center; }
+  .hello small { color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: 12px; }
+  .hello h1 { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 5vw, 40px); letter-spacing: -0.03em; margin: 4px 0 0; line-height: 1.05; }
+
+  .scene { width: min(100%, 420px); aspect-ratio: 1.586; perspective: 1200px; }
+  .card3d {
+    position: relative; width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    transition: transform .7s cubic-bezier(.2,.8,.2,1);
+    --rx: 0deg; --ry: 0deg; --flip: 0deg;
+    transform: rotateX(var(--rx)) rotateY(calc(var(--ry) + var(--flip)));
+    cursor: pointer;
+  }
+  .card3d.tracking { transition: transform .12s ease-out; }
+  .card3d.flipped { --flip: 180deg; }
+  .face {
+    position: absolute; inset: 0; border-radius: 20px; overflow: hidden;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    box-shadow: 0 30px 60px -20px rgba(80, 10, 5, .45), 0 10px 20px -10px rgba(0,0,0,.25);
+  }
+  .front {
+    background:
+      radial-gradient(120% 90% at 100% 0%, #e2362b 0%, transparent 55%),
+      radial-gradient(90% 80% at 0% 100%, var(--red-deep) 0%, transparent 60%),
+      var(--red);
+    color: var(--cream);
+    padding: 6% 6.5%;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .front::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,.09) 1.2px, transparent 1.3px);
+    background-size: 14px 14px;
+    mask-image: linear-gradient(120deg, #000 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .front-top { display: flex; justify-content: space-between; align-items: flex-start; position: relative; }
+  .store { font-family: var(--display); font-weight: 800; font-size: clamp(14px, 3.6vw, 17px); letter-spacing: -0.01em; line-height: 1.1; }
+  .store span { display: block; font-family: var(--body); font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; opacity: .75; margin-top: 3px; }
+  .chip { font-size: 10px; font-weight: 700; letter-spacing: .1em; background: var(--mustard); color: var(--ink); padding: 4px 8px; border-radius: 999px; text-transform: uppercase; }
+  .card-title { font-family: var(--display); font-weight: 800; font-size: clamp(20px, 5.8vw, 28px); line-height: 1; letter-spacing: -0.03em; position: relative; white-space: nowrap; }
+  .stamps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; position: relative; width: 70%; }
+  .stamp {
+    aspect-ratio: 1; border-radius: 50%;
+    border: 1.5px dashed rgba(255, 243, 220, .45);
+    display: grid; place-items: center;
+  }
+  .stamp svg { width: 62%; height: 62%; opacity: 0; transform: scale(.4) rotate(-30deg); transition: .4s cubic-bezier(.3,1.6,.5,1); }
+  .stamp.on { background: var(--cream); border: 0; }
+  .stamp.on svg { opacity: 1; transform: none; }
+  .stamp.pop { animation: pop .6s ease; }
+  @keyframes pop { 40% { transform: scale(1.25); } }
+  .front-bottom { display: flex; justify-content: space-between; align-items: flex-end; font-size: 11px; position: relative; }
+  .front-bottom b { display: block; font-size: 14px; font-weight: 700; letter-spacing: .01em; margin-top: 2px; }
+  .front-bottom .lbl { opacity: .7; text-transform: uppercase; letter-spacing: .1em; font-size: 9px; font-weight: 600; }
+
+  .back {
+    transform: rotateY(180deg);
+    background: var(--cream);
+    color: var(--ink);
+    display: grid; grid-template-columns: auto 1fr; gap: 6%; align-items: center;
+    padding: 6.5%;
+  }
+  .back::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 8px; background: var(--red); }
+  .qr-box { background: #fff; padding: 8px; border-radius: 12px; border: 1px solid var(--line); line-height: 0; }
+  .qr-box img, .qr-box canvas { width: clamp(96px, 26vw, 128px) !important; height: auto !important; display: block; }
+  .back h3 { font-family: var(--display); font-weight: 800; font-size: clamp(16px, 4.4vw, 20px); margin: 0 0 6px; letter-spacing: -0.02em; line-height: 1.1; }
+  .back p { margin: 0 0 10px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+  .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; font-size: 13px; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; display: inline-block; letter-spacing: .06em; }
+
+  .glare {
+    position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+    background: radial-gradient(circle at var(--gx, 50%) var(--gy, 0%), rgba(255,255,255,.28), transparent 45%);
+    mix-blend-mode: overlay;
+  }
+  .hint { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+
+  .progress-wrap { width: min(100%, 420px); }
+  .progress-text { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+  .progress-text b { font-weight: 700; }
+  .bar { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--red), #ec5b2a); border-radius: inherit; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+
+  .reward-banner {
+    width: min(100%, 420px); background: var(--ink); color: #fff; border-radius: var(--radius);
+    padding: 14px 16px; display: flex; gap: 12px; align-items: center;
+  }
+  .reward-banner .ico { width: 40px; height: 40px; border-radius: 12px; background: var(--mustard); display: grid; place-items: center; flex: none; }
+  .reward-banner b { display: block; font-size: 15px; }
+  .reward-banner span { font-size: 13px; opacity: .75; }
+
+  /* side panel */
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+  .panel h2 { font-family: var(--display); font-weight: 700; font-size: 18px; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .panel > p { color: var(--muted); margin: 0 0 16px; font-size: 14px; line-height: 1.5; }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .field label { font-size: 13px; font-weight: 600; }
+  .field input {
+    border: 1px solid var(--line); background: #fff; border-radius: 12px; padding: 11px 12px; outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .field input:focus { border-color: var(--red); box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 18%, transparent); }
+  .btn {
+    border: 0; border-radius: 12px; padding: 11px 16px; font-weight: 700; font-size: 14px;
+    background: var(--red); color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform .1s, background .15s;
+  }
+  .btn:hover { background: var(--red-deep); }
+  .btn:active { transform: scale(.97); }
+  .btn.block { width: 100%; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .btn.ghost:hover { background: var(--cream); }
+  .btn.dark { background: var(--ink); }
+  .btn.dark:hover { background: #3a2a25; }
+  .btn.gold { background: var(--mustard); color: var(--ink); }
+  .btn.gold:hover { background: #e2a010; }
+  .btn:disabled { opacity: .4; pointer-events: none; }
+  .sep { height: 1px; background: var(--line); margin: 18px 0; }
+  .member-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow: auto; }
+  .member-pick {
+    display: flex; align-items: center; gap: 10px; text-align: left; width: 100%;
+    background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px;
+  }
+  .member-pick[aria-current="true"] { border-color: var(--red); background: var(--cream); }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--red); color: var(--cream); display: grid; place-items: center; font-weight: 700; font-size: 13px; flex: none; }
+  .member-pick .meta { flex: 1; min-width: 0; }
+  .member-pick .meta b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .member-pick .meta small { color: var(--muted); font-size: 12px; }
+
+  /* ---------- dashboard ---------- */
+  .dash-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+  .dash-head h1 { font-family: var(--display); font-weight: 800; font-size: clamp(26px, 4vw, 34px); letter-spacing: -0.03em; margin: 0; }
+  .dash-head p { margin: 4px 0 0; color: var(--muted); }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+  .kpi small { color: var(--muted); font-size: 13px; font-weight: 600; }
+  .kpi b { display: block; font-family: var(--display); font-size: 30px; font-weight: 700; letter-spacing: -0.03em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .dash-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 20px; align-items: start; }
+  .scan-result { margin-top: 14px; }
+  .found {
+    border: 1px solid var(--line); background: #fff; border-radius: 14px; padding: 14px;
+  }
+  .found-top { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .found-top b { display: block; }
+  .found-top small { color: var(--muted); }
+  .mini-stamps { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; }
+  .mini-stamps i { width: 18px; height: 18px; border-radius: 50%; border: 1.5px dashed var(--line); }
+  .mini-stamps i.on { background: var(--red); border-color: var(--red); }
+  .found .row { display: flex; gap: 8px; }
+  .found .row .btn { flex: 1; }
+  .notice { font-size: 13px; padding: 10px 12px; border-radius: 10px; background: var(--cream); color: var(--ink); }
+  .notice.err { background: #fde8e6; color: var(--red-deep); }
+  .consent { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: var(--muted); margin: 4px 0 14px; cursor: pointer; }
+  .consent input { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--red); flex: none; }
+  .consent a, .legal a { color: var(--red-deep); font-weight: 600; }
+  .legal { margin: 16px 0 0; font-size: 12px; text-align: center; }
+  .btn.ghost.danger { color: var(--red-deep); border-color: #f2c4bf; }
+  .btn.ghost.danger:hover { background: #fde8e6; }
+  .dash-grid.solo { grid-template-columns: minmax(0, 560px); }
+  .pick-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; margin-bottom: 8px; }
+  .pick-head span { color: var(--muted); }
+  .menu-pick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .mchip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 600; display: inline-flex; gap: 6px; align-items: center; }
+  .mchip:hover { background: var(--cream); }
+  .mchip.on { border-color: var(--red); background: #fdecea; color: var(--red-deep); }
+  .mchip b { background: var(--red); color: #fff; border-radius: 999px; min-width: 20px; height: 20px; display: grid; place-items: center; font-size: 11px; padding: 0 6px; }
+  .pick-sum { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 13px; margin-bottom: 12px; color: var(--muted); }
+  .pick-sum span { color: var(--ink); font-weight: 600; }
+  .linkish { border: 0; background: none; padding: 0 4px; color: var(--red); font-weight: 700; font-size: 13px; }
+  .menu-admin { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow: auto; }
+  .menu-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 6px 6px 6px 12px; font-size: 14px; font-weight: 600; }
+  .menu-row.off span { color: var(--muted); text-decoration: line-through; font-weight: 500; }
+
+  .table-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .table-tools { display: flex; gap: 10px; padding: 14px; border-bottom: 1px solid var(--line); align-items: center; }
+  .table-tools h2 { font-family: var(--display); font-weight: 700; font-size: 17px; margin: 0; flex: 1; letter-spacing: -0.02em; }
+  .search { border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 8px 12px; width: 220px; max-width: 50vw; outline: none; }
+  .search:focus { border-color: var(--red); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 10px 14px; background: var(--bg); }
+  td { padding: 10px 14px; border-top: 1px solid var(--line); vertical-align: middle; }
+  td .who { display: flex; gap: 10px; align-items: center; }
+  td .who b { display: block; font-weight: 600; }
+  td .who small { color: var(--muted); font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .pill .mbar { width: 64px; height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .pill .mbar i { display: block; height: 100%; background: var(--red); }
+  .ready { color: var(--green); font-weight: 700; font-size: 12px; background: #e3f3ea; padding: 3px 8px; border-radius: 99px; }
+  .actions { display: flex; gap: 6px; justify-content: flex-end; }
+  .icon-btn { border: 1px solid var(--line); background: #fff; border-radius: 9px; padding: 6px 10px; font-weight: 600; font-size: 13px; }
+  .icon-btn:hover { background: var(--cream); }
+  .icon-btn.primary { background: var(--red); color: #fff; border-color: var(--red); }
+  .icon-btn.primary:hover { background: var(--red-deep); }
+  .empty { padding: 32px 16px; text-align: center; color: var(--muted); }
+
+  .activity { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
+  .activity li { display: flex; gap: 10px; align-items: baseline; }
+  .activity time { color: var(--muted); font-variant-numeric: tabular-nums; flex: none; width: 42px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0;
+    background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 12px; font-weight: 600; font-size: 14px;
+    transition: .3s; z-index: 50; pointer-events: none; max-width: calc(100% - 32px);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 40; overflow: hidden; }
+  .confetti i { position: absolute; top: -12px; width: 8px; height: 14px; border-radius: 2px; animation: fall 1.6s ease-in forwards; }
+  @keyframes fall { to { transform: translateY(105vh) rotate(720deg); opacity: .6; } }
+
+  @media (max-width: 900px) {
+    .customer, .dash-grid { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .col-hide { display: none; }
+  }
+  @media (max-width: 520px) {
+    .brand-name { display: none; }
+    .table-tools { flex-wrap: wrap; }
+    .search { width: 100%; max-width: none; }
+    td, th { padding: 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div class="brand-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff3dc"><path d="M15.5 2.5a6 6 0 0 1 3.2 11.1l-3.4 2.2-1.8 1.8a2.4 2.4 0 1 1-3.4 3.4 2.4 2.4 0 1 1-1.7-4.1 2.4 2.4 0 0 1 2-1.2l1.8-1.8 2.2-3.4A6 6 0 0 1 15.5 2.5Z"/></svg></div>
+      <span class="brand-name" id="brandName">Ayam Garing Juara</span>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-view="customer">Kartu Saya</button>
+      <button class="tab" role="tab" aria-selected="false" data-view="dashboard">Dashboard</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ============ CUSTOMER ============ -->
+  <section class="view" id="view-customer">
+    <div class="customer">
+      <div class="stage">
+        <div class="hello">
+          <small>Member</small>
+          <h1 id="hello">Halo!</h1>
+        </div>
+
+        <div class="scene" id="scene">
+          <div class="card3d" id="card" role="button" tabindex="0" aria-label="Balik kartu">
+            <div class="face front">
+              <div class="front-top">
+                <div class="store"><span id="storeName">Ayam Garing Juara</span></div>
+                <div class="chip" id="tierChip">Member</div>
+              </div>
+              <div class="card-title">LOYALTY CARD</div>
+              <div class="stamps" id="stamps"></div>
+              <div class="front-bottom">
+                <div><span class="lbl">Nama</span><b id="cardName">—</b></div>
+                <div style="text-align:right"><span class="lbl">ID Member</span><b id="cardId">—</b></div>
+              </div>
+              <div class="glare"></div>
+            </div>
+            <div class="face back">
+              <div class="qr-box" id="qr"></div>
+              <div>
+                <h3>Tunjukin ke kasir</h3>
+                <p>Kasir scan QR ini tiap kamu beli, dapat 1 stempel.</p>
+                <span class="code" id="backCode">—</span>
+              </div>
+              <div class="glare"></div>
+            </div>
+          </div>
+        </div>
+        <div class="hint">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+          Tap kartu buat lihat QR code
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress-text"><span id="progLabel">0 dari 10 stempel</span><b id="progLeft"></b></div>
+          <div class="bar"><i id="progBar" style="width:0%"></i></div>
+        </div>
+
+        <div class="reward-banner">
+          <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1c1210" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg></div>
+          <div><b id="rewardTitle">Hadiah</b><span id="rewardSub"></span></div>
+        </div>
+      </div>
+
+      <aside class="panel" id="sidePanel">
+        <div id="joinBox">
+          <h2>Daftar member</h2>
+          <p>Isi nama & nomor HP, langsung dapat kartu digital dengan QR unik. Bonus 1 stempel buat member baru.</p>
+          <form id="joinForm">
+            <div class="field"><label for="jName">Nama</label><input id="jName" required maxlength="60" placeholder="cth. Rina Putri" autocomplete="name"></div>
+            <div class="field"><label for="jPhone">Nomor HP</label><input id="jPhone" required inputmode="tel" placeholder="08xx xxxx xxxx" autocomplete="tel"></div>
+            <label class="consent">
+              <input type="checkbox" id="jConsent" required>
+              <span>Saya setuju nama & nomor HP saya disimpan untuk program member ini, sesuai <a href="privasi.html" target="_blank" rel="noopener">Kebijakan Privasi</a>.</span>
+            </label>
+            <button class="btn block" type="submit" id="joinBtn">Buat kartu</button>
+          </form>
+        </div>
+        <div id="ownedBox" hidden>
+          <h2>Simpan kartu kamu</h2>
+          <p>Kartu ini kesimpan di HP ini. Simpan link-nya biar bisa dibuka lagi di HP lain.</p>
+          <button class="btn block dark" id="copyMyLink">Salin link kartu</button>
+          <div class="sep"></div>
+          <p style="margin:0 0 10px">Bukan kartu kamu?</p>
+          <button class="btn block ghost" id="forgetCard">Keluar dari kartu ini</button>
+          <div class="sep"></div>
+          <p style="margin:0 0 10px">Mau berhenti jadi member? Kartu, stempel, dan riwayat kunjunganmu dihapus permanen.</p>
+          <button class="btn block ghost danger" id="deleteMe">Hapus kartu & data saya</button>
+        </div>
+        <p class="legal"><a href="privasi.html" target="_blank" rel="noopener">Kebijakan Privasi</a></p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section class="view" id="view-dashboard" hidden>
+    <!-- login -->
+    <div id="loginBox" class="panel" style="max-width:400px;margin:24px auto">
+      <h2>Masuk pakai akun tokogue</h2>
+      <p id="loginHint">Nomor HP & password yang sama dengan aplikasi tokogue. Kasir bisa kasih stempel; atasan juga bisa atur menu & lihat member.</p>
+      <form id="loginForm">
+        <div class="field"><label for="lPhone">Nomor HP</label><input id="lPhone" required inputmode="tel" placeholder="08xx xxxx xxxx" autocomplete="username"></div>
+        <div class="field"><label for="lPass">Password</label><input id="lPass" type="password" required minlength="6" autocomplete="current-password"></div>
+        <button class="btn dark block" type="submit">Masuk</button>
+      </form>
+      <div id="loginMsg" style="margin-top:12px"></div>
+    </div>
+
+    <!-- logged in but not owner -->
+    <div id="notOwnerBox" class="panel" style="max-width:400px;margin:24px auto" hidden>
+      <h2>Akun belum bisa dipakai</h2>
+      <p>Akun tokogue ini belum aktif (masih nunggu approval HR) atau sudah ditolak.</p>
+      <button class="btn block ghost" data-logout>Keluar</button>
+    </div>
+
+    <div id="dashBox" hidden>
+    <div class="dash-head">
+      <div>
+        <h1 id="dashTitle">Kasir Loyalty</h1>
+        <p id="dashSub">Scan kartu pelanggan, pilih menu yang dipesan, kasih stempel.</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn ghost" id="refreshBtn">Muat ulang</button>
+        <button class="btn ghost" data-logout>Keluar</button>
+      </div>
+    </div>
+
+    <div class="kpis" data-mgr>
+      <div class="kpi"><small>Total member</small><b id="kMembers">0</b></div>
+      <div class="kpi"><small>Stempel hari ini</small><b id="kToday">0</b></div>
+      <div class="kpi"><small>Siap tukar hadiah</small><b id="kReady">0</b></div>
+      <div class="kpi"><small>Hadiah ditukar</small><b id="kRedeemed">0</b></div>
+    </div>
+
+    <div class="dash-grid" id="dashGrid">
+      <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+        <div class="panel" id="scanPanel">
+          <h2>Scan member</h2>
+          <p>Ketik ID member dari kartu (atau scan QR pakai kamera kalau browser-nya mendukung).</p>
+          <form id="scanForm" style="display:flex;gap:8px">
+            <input class="search" id="scanInput" placeholder="cth. LC-7K2QX" style="flex:1;width:auto;max-width:none;text-transform:uppercase" autocomplete="off">
+            <button class="btn dark" type="submit">Cari</button>
+          </form>
+          <button class="btn ghost block" id="camBtn" style="margin-top:8px" hidden>Scan pakai kamera</button>
+          <video id="camVideo" playsinline muted style="width:100%;border-radius:12px;margin-top:8px;display:none"></video>
+          <div class="scan-result" id="scanResult"></div>
+        </div>
+
+        <div class="panel" data-mgr>
+          <h2>Daftar menu</h2>
+          <p>Menu yang bisa dipilih kasir. Menu yang disembunyikan tetap tercatat di laporan.</p>
+          <form id="menuForm" style="display:flex;gap:8px;margin-bottom:12px">
+            <input class="search" id="menuInput" placeholder="Nama menu baru" maxlength="60" style="flex:1;width:auto;max-width:none" autocomplete="off">
+            <button class="btn dark" type="submit">Tambah</button>
+          </form>
+          <div class="menu-admin" id="menuAdmin"></div>
+        </div>
+
+        <div class="panel" data-mgr>
+          <h2>Aturan program</h2>
+          <p>Berlaku buat semua kartu.</p>
+          <form id="settingsForm">
+            <div class="field"><label for="sStore">Nama toko</label><input id="sStore" maxlength="60"></div>
+            <div class="field"><label for="sTarget">Stempel buat 1 hadiah</label><input id="sTarget" type="number" min="3" max="15"></div>
+            <div class="field"><label for="sReward">Hadiahnya</label><input id="sReward" maxlength="120"></div>
+            <button class="btn block dark" type="submit">Simpan</button>
+          </form>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:20px;min-width:0" data-mgr>
+        <div class="table-wrap">
+          <div class="table-tools">
+            <h2>Member</h2>
+            <input class="search" id="search" placeholder="Cari nama / ID / HP">
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Member</th><th>Stempel</th><th class="col-hide">Terakhir datang</th><th></th></tr></thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Aktivitas terbaru</h2>
+          <p style="margin-bottom:12px">Laporan lengkap (menu terlaris, kunjungan per bulan) ada di aplikasi tokogue → Pelanggan.</p>
+          <ul class="activity" id="activity"></ul>
+        </div>
+      </div>
+    </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Project Supabase tokogue (sama dengan tokogue_app/lib/config.dart) =====
+const SUPABASE_URL = "https://sinxdbpbmodmtxzphgyx.supabase.co";
+const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publishable key project tokogue — memang aman ditaruh di halaman
+// =====================================================================
+
+(() => {
+  const TOKEN_KEY = "loyalty-card-token";
+  const DRUM = '<svg viewBox="0 0 24 24" fill="#c8231c"><path d="M15.5 2.5a6 6 0 0 1 3.2 11.1l-3.4 2.2-1.8 1.8a2.4 2.4 0 1 1-3.4 3.4 2.4 2.4 0 1 1-1.7-4.1 2.4 2.4 0 0 1 2-1.2l1.8-1.8 2.2-3.4A6 6 0 0 1 15.5 2.5Z"/></svg>';
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const initials = (n) => n.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+  const day = 864e5;
+  const ago = (iso) => {
+    const m = Math.round((Date.now() - new Date(iso)) / 6e4);
+    if (m < 1) return "baru saja";
+    if (m < 60) return m + " mnt lalu";
+    const h = Math.round(m / 60);
+    if (h < 24) return h + " jam lalu";
+    return Math.round(h / 24) + " hari lalu";
+  };
+  const hhmm = (iso) => {
+    const d = new Date(iso);
+    return Date.now() - d < day ? d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+  };
+  // Token kartu disimpan di HP; kalau penyimpanan browser diblok, tetap dipegang selama halaman terbuka.
+  let memToken = null;
+  const store = {
+    get: () => { try { return localStorage.getItem(TOKEN_KEY) || memToken; } catch { return memToken; } },
+    set: (v) => { memToken = v || null; try { v ? localStorage.setItem(TOKEN_KEY, v) : localStorage.removeItem(TOKEN_KEY); } catch {} },
+  };
+  const ERR = {
+    phone_taken: "Nomor ini sudah terdaftar. Minta link kartumu ke kasir.",
+    consent_required: "Centang persetujuan dulu ya.",
+    "Could not find the function": "Server belum diperbarui. Admin: jalankan ulang supabase/loyalty.sql (repo tokogue).",
+    invalid_phone: "Nomor HP-nya belum bener.",
+    invalid_name: "Nama wajib diisi (maks 60 huruf).",
+    not_staff: "Akun ini bukan karyawan aktif tokogue.",
+    not_manager: "Cuma atasan yang bisa lihat ini.",
+    invalid_items: "Ada menu yang nggak valid. Muat ulang lalu coba lagi.",
+    duplicate: "Menu itu sudah ada.",
+    card_full_or_missing: "Kartu sudah penuh, tukar hadiah dulu.",
+    not_ready: "Stempel belum cukup buat tukar hadiah.",
+    "Invalid login credentials": "Nomor HP atau password salah.",
+    "Email not confirmed": "Akun tokogue ini belum dikonfirmasi.",
+  };
+  const errText = (e) => {
+    const msg = e?.message || String(e);
+    const k = Object.keys(ERR).find((k) => msg.includes(k));
+    return k ? ERR[k] : "Ada masalah: " + msg;
+  };
+
+  const toast = (msg) => {
+    const el = $("#toast");
+    el.textContent = msg; el.classList.add("show");
+    clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2600);
+  };
+  const confetti = () => {
+    const box = document.createElement("div"); box.className = "confetti";
+    const colors = ["#c8231c", "#f4b223", "#fff3dc", "#1c1210"];
+    for (let i = 0; i < 70; i++) {
+      const p = document.createElement("i");
+      p.style.left = Math.random() * 100 + "vw";
+      p.style.background = colors[i % 4];
+      p.style.animationDelay = Math.random() * 0.4 + "s";
+      p.style.animationDuration = 1.2 + Math.random() * 0.9 + "s";
+      box.appendChild(p);
+    }
+    document.body.appendChild(box);
+    setTimeout(() => box.remove(), 2600);
+  };
+  const cardLink = (token) => location.origin + location.pathname + "?card=" + token;
+  const copy = async (text, ok) => {
+    try { await navigator.clipboard.writeText(text); toast(ok); }
+    catch { prompt("Salin link ini:", text); }
+  };
+
+  if (!SUPABASE_KEY || !window.supabase) {
+    document.querySelector("main").innerHTML = `
+      <div class="panel" style="max-width:520px;margin:40px auto">
+        <h2>Belum tersambung ke Supabase</h2>
+        <p>Buka file <b>index.html</b>, isi <code>SUPABASE_KEY</code> di bagian atas &lt;script&gt; dengan publishable key dari Supabase → Project Settings → API Keys.</p>
+      </div>`;
+    return;
+  }
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // =========================================================
+  // Sisi pelanggan
+  // =========================================================
+  const url = new URL(location.href);
+  const linkToken = url.searchParams.get("card");
+  if (linkToken) { store.set(linkToken); url.searchParams.delete("card"); history.replaceState(null, "", url); }
+
+  let myCard = null, lastStampCount = null, lastCardToken = null;
+
+  async function loadMyCard() {
+    const token = store.get();
+    if (!token) { myCard = null; renderCard(); return; }
+    const { data, error } = await sb.rpc("loyalty_get_card", { p_token: token });
+    if (error) { if (!myCard) toast(errText(error)); return; }
+    if (!data) { store.set(null); myCard = null; toast("Kartu nggak ketemu"); renderCard(); return; }
+    const wasStamps = myCard?.stamps;
+    myCard = data;
+    renderCard();
+    if (wasStamps != null && data.stamps > wasStamps) toast(data.stamps >= data.target ? "Kartu penuh! Tukar hadiahmu di kasir" : "Yeay, +1 stempel!");
+    if (wasStamps != null && data.stamps >= data.target && wasStamps < data.target) confetti();
+  }
+
+  function renderCard() {
+    const has = !!myCard;
+    $("#joinBox").hidden = has;
+    $("#ownedBox").hidden = !has;
+    const c = myCard || { name: "Calon Member", code: "—", stamps: 0, redeemed: 0, target: 10, store: "", reward: "" };
+    const T = c.target;
+    $("#hello").textContent = has ? "Halo, " + c.name.split(" ")[0] + "!" : "Kartu kamu belum ada";
+    $("#storeName").textContent = c.store || "Loyalty Card";
+    if (c.store) { $("#brandName").textContent = c.store; document.title = c.store + " · Kartu Loyalitas"; }
+    $("#cardName").textContent = has ? c.name : "—";
+    $("#cardId").textContent = c.code;
+    $("#backCode").textContent = c.code;
+    $("#tierChip").textContent = c.redeemed >= 3 ? "Gold" : c.redeemed >= 1 ? "Silver" : "Member";
+
+    const st = $("#stamps");
+    st.style.gridTemplateColumns = `repeat(${T > 10 ? Math.ceil(T / 2) : T <= 6 ? T : 5}, 1fr)`;
+    const same = lastCardToken === c.token;
+    st.innerHTML = Array.from({ length: T }, (_, i) => {
+      const on = i < c.stamps;
+      const pop = on && same && lastStampCount !== null && i >= lastStampCount;
+      return `<div class="stamp${on ? " on" : ""}${pop ? " pop" : ""}">${DRUM}</div>`;
+    }).join("");
+    lastStampCount = c.stamps; lastCardToken = c.token;
+
+    const left = T - c.stamps;
+    $("#progLabel").textContent = `${c.stamps} dari ${T} stempel`;
+    $("#progLeft").textContent = !has ? "" : left ? `${left} lagi` : "Siap ditukar!";
+    $("#progBar").style.width = (c.stamps / T) * 100 + "%";
+    $("#rewardTitle").textContent = has ? c.reward : "Daftar dulu, gratis";
+    $("#rewardSub").textContent = !has ? "Isi nama & nomor HP buat dapat kartu." : left ? `Kumpulin ${T} stempel, gratis buat kamu.` : "Tunjukin kartu ke kasir buat tukar.";
+
+    const qr = $("#qr");
+    if (qr.dataset.code !== c.code) {
+      qr.innerHTML = ""; qr.dataset.code = c.code;
+      if (has && window.QRCode) new QRCode(qr, { text: "LOYALTY:" + c.code, width: 256, height: 256, colorDark: "#1c1210", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+    }
+  }
+
+  $("#joinForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = $("#joinBtn"); btn.disabled = true;
+    const { data, error } = await sb.rpc("loyalty_join", { p_name: $("#jName").value, p_phone: $("#jPhone").value, p_consent: $("#jConsent").checked });
+    btn.disabled = false;
+    if (error) return toast(errText(error));
+    store.set(data.token); myCard = data; e.target.reset();
+    $("#card").classList.remove("flipped"); renderCard();
+    toast("Kartu jadi! Bonus 1 stempel buat member baru"); confetti();
+  });
+  $("#copyMyLink").addEventListener("click", () => myCard && copy(cardLink(myCard.token), "Link kartu disalin"));
+  $("#forgetCard").addEventListener("click", () => {
+    if (!confirm("Hapus kartu ini dari HP ini? Kamu masih bisa buka lagi pakai link-nya.")) return;
+    store.set(null); myCard = null; renderCard();
+  });
+  $("#deleteMe").addEventListener("click", async () => {
+    if (!myCard) return;
+    if (!confirm(`Hapus permanen kartu ${myCard.code} beserta ${myCard.stamps} stempel & riwayat kunjunganmu? Ini nggak bisa dibatalkan.`)) return;
+    const { error } = await sb.rpc("loyalty_delete_me", { p_token: myCard.token });
+    if (error) return toast(errText(error));
+    store.set(null); myCard = null; renderCard();
+    toast("Kartu & datamu sudah dihapus");
+  });
+
+  // update otomatis tiap 8 detik waktu pelanggan buka kartunya
+  setInterval(() => {
+    if (document.visibilityState === "visible" && !$("#view-customer").hidden && store.get()) loadMyCard();
+  }, 8000);
+
+  // =========================================================
+  // Sisi kasir & atasan
+  // =========================================================
+  // Karyawan tokogue aktif = kasir (scan, pilih menu, stempel).
+  // Atasan = + daftar member, menu, aturan program.
+  let isOwner = false, isManager = false;
+  let members = [], settings = null, menu = [];
+  let scanned = null;            // kartu yang lagi dilayani (format loyalty_card_json)
+  const picks = new Map();       // menu_id -> qty
+
+  async function checkOwner(session) {
+    const show = (id) => ["#loginBox", "#notOwnerBox", "#dashBox"].forEach((b) => ($(b).hidden = b !== id));
+    if (!session) { isOwner = isManager = false; scanned = null; picks.clear(); show("#loginBox"); return; }
+    const [staff, mgr] = await Promise.all([sb.rpc("loyalty_is_staff"), sb.rpc("loyalty_is_manager")]);
+    isOwner = !staff.error && staff.data === true;
+    isManager = isOwner && !mgr.error && mgr.data === true;
+    document.querySelectorAll("[data-mgr]").forEach((el) => (el.hidden = !isManager));
+    $("#dashGrid").classList.toggle("solo", !isManager);
+    $("#dashTitle").textContent = isManager ? "Dashboard Loyalty" : "Kasir Loyalty";
+    $("#dashSub").textContent = isManager
+      ? "Pantau member, atur menu, kasih stempel, tukar hadiah."
+      : "Scan kartu pelanggan, pilih menu yang dipesan, kasih stempel.";
+    show(isOwner ? "#dashBox" : "#notOwnerBox");
+    if (isOwner) loadDash();
+  }
+
+  async function loadDash() {
+    if (!isOwner) return;
+    const base = await Promise.all([
+      sb.from("loyalty_settings").select("*").eq("id", 1).single(),
+      sb.from("loyalty_menu").select("id, name, active").order("name"),
+    ]);
+    const baseErr = base[0].error || base[1].error;
+    if (baseErr) return toast(errText(baseErr));
+    settings = base[0].data; menu = base[1].data;
+    $("#brandName").textContent = settings.store;
+
+    if (isManager) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const [m, a, t] = await Promise.all([
+        sb.from("loyalty_members").select("id, code, name, phone, stamps, redeemed, last_visit").order("last_visit", { ascending: false }).limit(1000),
+        sb.from("loyalty_activity").select("note, created_at").order("created_at", { ascending: false }).limit(8),
+        sb.from("loyalty_activity").select("id", { count: "exact", head: true }).eq("kind", "stamp").gte("created_at", today.toISOString()),
+      ]);
+      const err = m.error || a.error || t.error;
+      if (err) return toast(errText(err));
+      members = m.data;
+      renderManager(a.data, t.count || 0);
+    }
+    renderScan();
+  }
+
+  function renderManager(activity, stampsToday) {
+    const T = settings.target;
+    $("#kMembers").textContent = members.length;
+    $("#kToday").textContent = stampsToday;
+    $("#kReady").textContent = members.filter((m) => m.stamps >= T).length;
+    $("#kRedeemed").textContent = members.reduce((n, m) => n + m.redeemed, 0);
+    renderRows();
+    $("#activity").innerHTML = activity.map((l) => `<li><time>${hhmm(l.created_at)}</time><span>${esc(l.note)}</span></li>`).join("") || '<li style="color:var(--muted)">Belum ada aktivitas.</li>';
+    $("#menuAdmin").innerHTML = menu.length ? menu.map((x) => `
+      <div class="menu-row${x.active ? "" : " off"}">
+        <span>${esc(x.name)}</span>
+        <button class="icon-btn" data-menu-toggle="${x.id}" data-active="${x.active}">${x.active ? "Sembunyikan" : "Tampilkan"}</button>
+      </div>`).join("") : '<p style="color:var(--muted);margin:0">Belum ada menu.</p>';
+    $("#sStore").value = settings.store;
+    $("#sTarget").value = settings.target;
+    $("#sReward").value = settings.reward;
+  }
+
+  function renderRows() {
+    const T = settings.target;
+    const q = $("#search").value.trim().toLowerCase();
+    const list = members.filter((m) => !q || (m.name + m.code + m.phone).toLowerCase().includes(q));
+    $("#rows").innerHTML = list.length ? list.map((m) => `
+      <tr>
+        <td><div class="who"><span class="avatar">${esc(initials(m.name))}</span><div><b>${esc(m.name)}</b><small>${esc(m.code)}</small></div></div></td>
+        <td>${m.stamps >= T ? '<span class="ready">Siap tukar</span>' : `<span class="pill">${m.stamps}/${T}<span class="mbar"><i style="width:${(m.stamps / T) * 100}%"></i></span></span>`}</td>
+        <td class="col-hide" style="color:var(--muted)">${ago(m.last_visit)}</td>
+        <td><div class="actions">
+          <button class="icon-btn primary" data-serve="${m.id}">Layani</button>
+          <button class="icon-btn" data-link="${m.id}" title="Salin link kartu buat dikirim ke pelanggan">Link</button>
+        </div></td>
+      </tr>`).join("") : `<tr><td colspan="4" class="empty">${members.length ? "Nggak ada member yang cocok." : "Belum ada member. Minta pelanggan daftar di tab Kartu Saya."}</td></tr>`;
+  }
+
+  function renderScan(msg) {
+    const box = $("#scanResult");
+    if (msg) { box.innerHTML = `<div class="notice err">${esc(msg)}</div>`; return; }
+    if (!scanned || !settings) { box.innerHTML = ""; return; }
+    const m = scanned, T = settings.target, full = m.stamps >= T;
+    const active = menu.filter((x) => x.active);
+    const chosen = [...picks].filter(([, q]) => q > 0);
+    box.innerHTML = `
+      <div class="found">
+        <div class="found-top">
+          <span class="avatar">${esc(initials(m.name))}</span>
+          <div style="flex:1"><b>${esc(m.name)}</b><small>${esc(m.code)} · ${m.stamps}/${T} stempel</small></div>
+          <button class="icon-btn" data-close-scan aria-label="Tutup">✕</button>
+        </div>
+        <div class="mini-stamps">${Array.from({ length: T }, (_, i) => `<i class="${i < m.stamps ? "on" : ""}"></i>`).join("")}</div>
+        ${full ? '<div class="notice" style="margin-bottom:12px">Kartu penuh. Tukar hadiah dulu, baru bisa dapat stempel lagi.</div>' : `
+        <div class="pick-head"><b>Pesan apa?</b>${chosen.length ? '<button class="linkish" data-clear-picks>Kosongkan</button>' : "<span>Tap menu, tap lagi buat nambah</span>"}</div>
+        <div class="menu-pick">${active.map((x) => {
+          const q = picks.get(x.id) || 0;
+          return `<button class="mchip${q ? " on" : ""}" data-menu="${x.id}">${esc(x.name)}${q ? `<b>${q}</b>` : ""}</button>`;
+        }).join("") || '<span style="color:var(--muted);font-size:13px">Belum ada menu. Atasan bisa nambah di Daftar menu.</span>'}</div>
+        ${chosen.length ? `<div class="pick-sum">${chosen.map(([id, q]) => {
+          const it = menu.find((x) => x.id === id);
+          return `<span>${esc(it ? it.name : "?")} ×${q} <button class="linkish" data-menu-minus="${id}" aria-label="Kurangi">−</button></span>`;
+        }).join("")}</div>` : ""}`}
+        <div class="row">
+          <button class="btn" data-stamp="${m.token}" ${full ? "disabled" : ""}>+1 Stempel${chosen.length ? "" : " (tanpa menu)"}</button>
+          <button class="btn gold" data-redeem="${m.token}" ${full ? "" : "disabled"}>Tukar hadiah</button>
+        </div>
+      </div>`;
+  }
+
+  function serve(card) {
+    scanned = card; picks.clear(); renderScan();
+    $("#scanPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  let busy = false;
+  async function ownerAction(fn, id) {
+    if (busy) return; busy = true;
+    const params = { p_member: id };
+    if (fn === "loyalty_add_stamp") params.p_items = [...picks].filter(([, q]) => q > 0).map(([menu_id, qty]) => ({ menu_id, qty }));
+    const { data, error } = await sb.rpc(fn, params);
+    busy = false;
+    if (error) { toast(errText(error)); return loadDash(); }
+    scanned = data; picks.clear();
+    if (fn === "loyalty_add_stamp") {
+      if (data.stamps >= data.target) { toast(`${data.name} siap tukar hadiah!`); confetti(); }
+      else toast(`+1 stempel buat ${data.name}`);
+    } else { toast("Hadiah ditukar, kartu mulai dari nol"); confetti(); }
+    if (myCard && myCard.token === id) loadMyCard();
+    loadDash();
+  }
+
+  async function toggleMenu(id, active) {
+    const { data, error } = await sb.from("loyalty_menu").update({ active: !active }).eq("id", id).select();
+    if (error || !data?.length) return toast(error ? errText(error) : "Cuma atasan yang bisa ubah menu.");
+    picks.delete(id); loadDash();
+  }
+
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-stamp],[data-redeem],[data-link],[data-logout],[data-serve],[data-menu],[data-menu-minus],[data-clear-picks],[data-close-scan],[data-menu-toggle]");
+    if (!b) return;
+    const d = b.dataset;
+    if (d.stamp) ownerAction("loyalty_add_stamp", d.stamp);
+    else if (d.redeem) ownerAction("loyalty_redeem", d.redeem);
+    else if (d.link) copy(cardLink(d.link), "Link kartu disalin, kirim ke pelanggan via WA");
+    else if (d.serve) {
+      const m = members.find((x) => x.id === d.serve);
+      if (m) serve({ token: m.id, code: m.code, name: m.name, stamps: m.stamps, redeemed: m.redeemed, target: settings.target });
+    }
+    else if (d.menu) { const id = +d.menu; picks.set(id, Math.min(50, (picks.get(id) || 0) + 1)); renderScan(); }
+    else if (d.menuMinus) { const id = +d.menuMinus, q = (picks.get(id) || 0) - 1; q > 0 ? picks.set(id, q) : picks.delete(id); renderScan(); }
+    else if ("clearPicks" in d) { picks.clear(); renderScan(); }
+    else if ("closeScan" in d) { scanned = null; picks.clear(); renderScan(); }
+    else if (d.menuToggle) toggleMenu(+d.menuToggle, d.active === "true");
+    else if ("logout" in d) { stopCam(); sb.auth.signOut(); }
+  });
+
+  $("#loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    $("#loginMsg").innerHTML = "";
+    // Sama seperti tokogue_app: nomor HP diubah jadi email <angka>@tokogue.app
+    const email = $("#lPhone").value.replace(/\D/g, "") + "@tokogue.app";
+    const { error } = await sb.auth.signInWithPassword({ email, password: $("#lPass").value });
+    if (error) $("#loginMsg").innerHTML = `<div class="notice err">${esc(errText(error))}</div>`;
+  });
+  sb.auth.onAuthStateChange((_evt, session) => setTimeout(() => checkOwner(session), 0));
+
+  $("#scanForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const v = $("#scanInput").value.trim();
+    if (!v) return;
+    const { data, error } = await sb.rpc("loyalty_lookup", { p_code: v });
+    if (error) return renderScan(errText(error));
+    if (!data) { scanned = null; return renderScan("ID member nggak ketemu."); }
+    $("#scanInput").value = "";
+    serve(data);
+  });
+  $("#search").addEventListener("input", renderRows);
+  $("#refreshBtn").addEventListener("click", () => loadDash().then(() => toast("Data terbaru dimuat")));
+  $("#menuForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = $("#menuInput").value.trim();
+    if (!name) return;
+    const { error } = await sb.from("loyalty_menu").insert({ name });
+    if (error) return toast(errText(error));
+    $("#menuInput").value = ""; toast("Menu ditambah"); loadDash();
+  });
+  $("#settingsForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!isManager) return toast("Cuma atasan yang bisa ubah aturan program.");
+    const target = Math.max(3, Math.min(15, parseInt($("#sTarget").value, 10) || 10));
+    const { data, error } = await sb.from("loyalty_settings").update({
+      store: $("#sStore").value.trim() || settings.store, target, reward: $("#sReward").value.trim() || settings.reward,
+    }).eq("id", 1).select();
+    if (error) return toast(errText(error));
+    if (!data?.length) return toast("Gagal simpan: akun ini bukan atasan.");
+    toast("Aturan program disimpan"); loadDash(); if (store.get()) loadMyCard();
+  });
+
+  // =========================================================
+  // Kartu 3D
+  // =========================================================
+  const card = $("#card"), scene = $("#scene");
+  const setTilt = (x, y) => {
+    card.style.setProperty("--ry", (x - 0.5) * 24 + "deg");
+    card.style.setProperty("--rx", (0.5 - y) * 18 + "deg");
+    card.querySelectorAll(".glare").forEach((g) => { g.style.setProperty("--gx", x * 100 + "%"); g.style.setProperty("--gy", y * 100 + "%"); });
+  };
+  scene.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "touch") return;
+    const r = scene.getBoundingClientRect();
+    card.classList.add("tracking");
+    setTilt((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+  });
+  scene.addEventListener("pointerleave", () => { card.classList.remove("tracking"); setTilt(0.5, 0.5); });
+  const flip = () => { if (!myCard) return toast("Daftar dulu buat dapat QR code"); card.classList.remove("tracking"); card.classList.toggle("flipped"); };
+  card.addEventListener("click", flip);
+  card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); } });
+  window.addEventListener("deviceorientation", (e) => {
+    if (e.gamma == null) return;
+    setTilt(Math.max(0, Math.min(1, 0.5 + e.gamma / 60)), Math.max(0, Math.min(1, 0.5 + (e.beta - 45) / 60)));
+  });
+  setTimeout(() => { setTilt(0.75, 0.35); setTimeout(() => setTilt(0.5, 0.5), 600); }, 300);
+
+  // =========================================================
+  // Tab & kamera
+  // =========================================================
+  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", x === t));
+    document.querySelectorAll(".view").forEach((v) => (v.hidden = v.id !== "view-" + t.dataset.view));
+    stopCam();
+    if (t.dataset.view === "dashboard") loadDash(); else if (store.get()) loadMyCard();
+  }));
+
+  let stream = null, raf = null;
+  function stopCam() {
+    if (stream) stream.getTracks().forEach((t) => t.stop());
+    stream = null; cancelAnimationFrame(raf);
+    $("#camVideo").style.display = "none"; $("#camBtn").textContent = "Scan pakai kamera";
+  }
+  // Pembaca QR: pakai BarcodeDetector bawaan (Chrome/Android) kalau ada,
+  // selain itu jsQR (iPhone/Safari, Firefox). Mengembalikan teks QR atau null.
+  async function makeQrReader() {
+    try {
+      if ("BarcodeDetector" in window && (await BarcodeDetector.getSupportedFormats()).includes("qr_code")) {
+        const det = new BarcodeDetector({ formats: ["qr_code"] });
+        return async (v) => (await det.detect(v)).map((c) => c.rawValue);
+      }
+    } catch {}
+    if (!window.jsQR) return null;
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    return async (v) => {
+      const w = v.videoWidth, h = v.videoHeight;
+      if (!w || !h) return [];
+      const scale = Math.min(1, 640 / Math.max(w, h));
+      canvas.width = Math.round(w * scale); canvas.height = Math.round(h * scale);
+      ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const hit = window.jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
+      return hit ? [hit.data] : [];
+    };
+  }
+
+  if (navigator.mediaDevices?.getUserMedia) {
+    $("#camBtn").hidden = false;
+    $("#camBtn").addEventListener("click", async () => {
+      if (stream) return stopCam();
+      try {
+        const read = await makeQrReader();
+        if (!read) return toast("Scanner belum siap. Ketik ID member aja dulu.");
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+        const v = $("#camVideo");
+        v.setAttribute("playsinline", ""); v.muted = true;
+        v.srcObject = stream; v.style.display = "block"; await v.play();
+        $("#camBtn").textContent = "Tutup kamera";
+        let last = 0;
+        const tick = async (t) => {
+          if (!stream) return;
+          if (t - last > 150) {
+            last = t;
+            try {
+              const hit = (await read(v)).find((x) => /^LOYALTY:/i.test(x));
+              if (hit) {
+                navigator.vibrate?.(60);
+                $("#scanInput").value = hit.slice(8); stopCam(); $("#scanForm").requestSubmit(); return;
+              }
+            } catch {}
+          }
+          raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+      } catch (e) {
+        stopCam();
+        toast(e?.name === "NotAllowedError" ? "Izin kamera ditolak. Aktifkan di pengaturan browser." : "Kamera nggak bisa dibuka");
+      }
+    });
+  }
+
+  renderCard();
+  loadMyCard();
+})();
+</script>
+</body>
+</html>

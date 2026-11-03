@@ -419,7 +419,7 @@ String _errorText(Object e) {
   if (e is PostgrestException) {
     if (e.message.contains('not_manager')) return 'Halaman ini khusus atasan.';
     if (e.code == 'PGRST202' || e.message.contains('Could not find the function')) {
-      return 'Fitur pelanggan belum dipasang di server. Admin: jalankan loyalty-card/supabase.sql di Supabase.';
+      return 'Fitur pelanggan belum dipasang di server. Admin: jalankan supabase/loyalty.sql di Supabase.';
     }
   }
   return friendlyError(e);
