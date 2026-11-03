@@ -21,6 +21,11 @@ create table if not exists public.loyalty_settings (
   reward text not null default '1 Paket Ayam Geprek + Es Teh' check (char_length(reward) between 1 and 120)
 );
 insert into public.loyalty_settings (id) values (1) on conflict (id) do nothing;
+-- Anti-curang: jeda minimal (menit) antar stempel untuk member yang sama. 0 = tanpa jeda.
+alter table public.loyalty_settings add column if not exists stamp_cooldown_min int not null default 30;
+do $$ begin
+  alter table public.loyalty_settings add constraint loyalty_settings_cooldown_chk check (stamp_cooldown_min between 0 and 240);
+exception when duplicate_object then null; end $$;
 
 -- `id` = token rahasia di link kartu pelanggan, `code` = ID yang dicetak di kartu & QR.
 create table if not exists public.loyalty_members (
@@ -278,9 +283,11 @@ language plpgsql security definer
 set search_path = ''
 as $$
 declare
-  v_target int;
-  v_visit  bigint;
-  v_bad    int;
+  v_target   int;
+  v_cooldown int;
+  v_last     timestamptz;
+  v_visit    bigint;
+  v_bad      int;
   m public.loyalty_members;
 begin
   if not public.loyalty_is_staff() then raise exception 'not_staff'; end if;
@@ -296,7 +303,14 @@ begin
       or coalesce((e ->> 'qty')::int, 0) not between 1 and 50;
   if v_bad > 0 then raise exception 'invalid_items'; end if;
 
-  select target into v_target from public.loyalty_settings where id = 1;
+  select target, stamp_cooldown_min into v_target, v_cooldown from public.loyalty_settings where id = 1;
+
+  -- kunci baris member dulu supaya dua kasir tidak bisa memberi stempel bersamaan
+  perform 1 from public.loyalty_members where id = p_member for update;
+  select max(created_at) into v_last from public.loyalty_visits where member_id = p_member;
+  if v_cooldown > 0 and v_last is not null and v_last > now() - make_interval(mins => v_cooldown) then
+    raise exception 'too_soon:%', ceil(extract(epoch from (v_last + make_interval(mins => v_cooldown) - now())) / 60)::int;
+  end if;
 
   update public.loyalty_members
      set stamps = stamps + 1, last_visit = now()

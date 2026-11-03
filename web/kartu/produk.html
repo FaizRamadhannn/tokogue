@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stempelin · Kartu Member Digital</title>
+<meta name="description" content="Kartu member digital buat usaha kuliner: pelanggan kumpulin stempel lewat QR, owner tahu siapa pelanggan setia dan menu favoritnya.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6efe4; --surface: #fffaf2; --line: #e8dccb; --ink: #1c1210; --muted: #75645a;
+    --red: #c8231c; --red-deep: #8f130e; --mustard: #f4b223; --cream: #fff3dc; --green: #1f7a4a;
+    --display: "Bricolage Grotesque", system-ui, sans-serif; --body: "Plus Jakarta Sans", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+  h1, h2, h3 { font-family: var(--display); letter-spacing: -0.03em; line-height: 1.05; margin: 0; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 14px; padding: 14px 20px; font-weight: 700; font-size: 15px; text-decoration: none; border: 0; cursor: pointer; transition: transform .1s, background .15s; }
+  .btn:active { transform: scale(.97); }
+  .btn.red { background: var(--red); color: #fff; } .btn.red:hover { background: var(--red-deep); }
+  .btn.dark { background: var(--ink); color: #fff; } .btn.dark:hover { background: #3a2a25; }
+  .btn.ghost { border: 1px solid var(--line); background: var(--surface); } .btn.ghost:hover { background: #fff; }
+
+  nav.top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  nav.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 12px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: -0.02em; text-decoration: none; }
+  .logo i { width: 34px; height: 34px; border-radius: 10px; background: var(--red); display: grid; place-items: center; }
+  nav.top .links { display: flex; gap: 22px; font-size: 14px; font-weight: 600; color: var(--muted); }
+  nav.top .links a { text-decoration: none; } nav.top .links a:hover { color: var(--ink); }
+
+  .hero { padding: 64px 0 56px; }
+  .hero .wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; }
+  .eyebrow { display: inline-block; font-size: 13px; font-weight: 700; color: var(--red-deep); background: #fdecea; border-radius: 99px; padding: 5px 12px; margin-bottom: 18px; }
+  .hero h1 { font-size: clamp(38px, 6vw, 64px); font-weight: 800; }
+  .hero h1 em { font-style: normal; color: var(--red); }
+  .hero p.lead { font-size: 19px; color: var(--muted); margin: 18px 0 28px; max-width: 520px; }
+  .cta { display: flex; gap: 10px; flex-wrap: wrap; }
+  .hero-note { font-size: 13px; color: var(--muted); margin-top: 14px; }
+
+  /* kartu mockup */
+  .mock { position: relative; height: 420px; }
+  .phone { position: absolute; width: 230px; height: 440px; border-radius: 34px; background: #1c1210; padding: 10px; box-shadow: 0 40px 80px -30px rgba(60,10,5,.5); }
+  .phone .scr { width: 100%; height: 100%; border-radius: 26px; background: var(--bg); overflow: hidden; padding: 18px 14px; display: flex; flex-direction: column; gap: 12px; }
+  .phone.a { left: 0; top: 0; transform: rotate(-5deg); }
+  .phone.b { right: 0; top: 30px; transform: rotate(4deg); }
+  .mini-card { border-radius: 14px; aspect-ratio: 1.586; background: radial-gradient(120% 90% at 100% 0%, #e2362b 0%, transparent 55%), var(--red); color: var(--cream); padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; }
+  .mini-card b { font-family: var(--display); font-size: 15px; letter-spacing: -0.02em; }
+  .mini-card .st { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; width: 72%; }
+  .mini-card .st i { aspect-ratio: 1; border-radius: 50%; border: 1px dashed rgba(255,243,220,.5); }
+  .mini-card .st i.on { background: var(--cream); border: 0; }
+  .mini-card small { font-size: 8px; opacity: .8; letter-spacing: .08em; }
+  .scr h4 { margin: 0; font-family: var(--display); font-size: 18px; letter-spacing: -0.02em; }
+  .scr .bar { height: 7px; border-radius: 9px; background: var(--line); overflow: hidden; } .scr .bar i { display: block; height: 100%; width: 70%; background: var(--red); }
+  .scr .rw { background: var(--ink); color: #fff; border-radius: 12px; padding: 10px; font-size: 11px; }
+  .scr .rw b { display: block; font-size: 12px; }
+  .scr .k { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .scr .k div { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px; font-size: 9.5px; color: var(--muted); }
+  .scr .k b { display: block; font-family: var(--display); font-size: 19px; color: var(--ink); }
+  .scr .tm { font-size: 10.5px; display: flex; flex-direction: column; gap: 6px; }
+  .scr .tm span { display: flex; justify-content: space-between; font-weight: 600; }
+  .scr .tm i { display: block; height: 5px; border-radius: 9px; background: var(--red); margin-top: 3px; }
+
+  section { padding: 72px 0; }
+  .sec-head { max-width: 640px; margin-bottom: 36px; }
+  .sec-head h2 { font-size: clamp(30px, 4.4vw, 44px); font-weight: 800; }
+  .sec-head p { color: var(--muted); font-size: 17px; margin: 12px 0 0; }
+  .kicker { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--red); margin-bottom: 10px; display: block; }
+
+  .problems { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .problem { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 22px; }
+  .problem b { display: block; font-family: var(--display); font-size: 20px; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .problem p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .dark-sec { background: var(--ink); color: #fff; }
+  .dark-sec .sec-head p { color: rgba(255,255,255,.7); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; counter-reset: s; }
+  .step { border: 1px solid rgba(255,255,255,.14); border-radius: 20px; padding: 24px; position: relative; }
+  .step::before { counter-increment: s; content: counter(s); font-family: var(--display); font-weight: 800; font-size: 44px; color: var(--mustard); line-height: 1; display: block; margin-bottom: 14px; }
+  .step h3 { font-size: 22px; margin-bottom: 8px; }
+  .step p { margin: 0; color: rgba(255,255,255,.72); font-size: 15px; }
+  .step .who { display: inline-block; margin-top: 14px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,.1); border-radius: 99px; padding: 4px 10px; }
+
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .feature { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 22px; }
+  .feature .ic { width: 42px; height: 42px; border-radius: 12px; background: #fdecea; color: var(--red); display: grid; place-items: center; margin-bottom: 14px; }
+  .feature h3 { font-size: 19px; margin-bottom: 6px; letter-spacing: -0.02em; }
+  .feature p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .owner { display: grid; grid-template-columns: .9fr 1.1fr; gap: 40px; align-items: center; }
+  .owner ul { list-style: none; padding: 0; margin: 20px 0 0; display: flex; flex-direction: column; gap: 14px; }
+  .owner li { display: flex; gap: 12px; font-size: 16px; }
+  .owner li::before { content: "✓"; flex: none; width: 26px; height: 26px; border-radius: 50%; background: #e3f3ea; color: var(--green); display: grid; place-items: center; font-weight: 800; font-size: 14px; }
+  .report { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 22px; box-shadow: 0 30px 60px -36px rgba(60,10,5,.35); }
+  .report .rh { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .report .rh b { font-family: var(--display); font-size: 19px; }
+  .report .rh span { font-size: 13px; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px; }
+  .report .k { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .report .k div { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 12px; color: var(--muted); }
+  .report .k b { display: block; font-family: var(--display); font-size: 26px; color: var(--ink); letter-spacing: -0.03em; }
+  .report table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .report td { padding: 9px 4px; border-top: 1px solid var(--line); }
+  .report td:nth-child(2) { font-family: var(--display); font-weight: 700; font-size: 17px; text-align: right; }
+  .report .fav { font-size: 12px; font-weight: 600; color: var(--red-deep); background: #fdecea; border-radius: 99px; padding: 2px 8px; white-space: nowrap; }
+
+  .trust { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .trust div { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; font-size: 14px; color: var(--muted); }
+  .trust b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+
+  .pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-items: stretch; }
+  .plan { background: #fff; border: 1px solid var(--line); border-radius: 22px; padding: 24px; display: flex; flex-direction: column; }
+  .plan.hot { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .plan .tag { align-self: flex-start; font-size: 12px; font-weight: 700; background: var(--mustard); color: var(--ink); border-radius: 99px; padding: 3px 10px; margin-bottom: 10px; }
+  .plan h3 { font-size: 22px; }
+  .plan .price { font-family: var(--display); font-size: 36px; font-weight: 800; letter-spacing: -0.03em; margin: 12px 0 2px; }
+  .plan .per { font-size: 13px; opacity: .7; }
+  .plan ul { padding-left: 18px; margin: 16px 0 0; font-size: 14.5px; flex: 1; }
+  .plan li { margin-bottom: 6px; }
+  .price-note { font-size: 13px; color: var(--muted); margin-top: 14px; }
+
+  .roadmap { display: flex; flex-wrap: wrap; gap: 10px; }
+  .roadmap span { background: var(--surface); border: 1px dashed var(--line); border-radius: 99px; padding: 8px 14px; font-size: 14px; font-weight: 600; }
+
+  .final { text-align: center; }
+  .final h2 { font-size: clamp(32px, 5vw, 52px); font-weight: 800; max-width: 760px; margin: 0 auto; }
+  .final p { color: var(--muted); font-size: 17px; margin: 14px auto 28px; max-width: 560px; }
+  .final .cta { justify-content: center; }
+  footer { padding: 28px 0 40px; color: var(--muted); font-size: 13px; text-align: center; }
+
+  @media (max-width: 900px) {
+    .hero .wrap, .owner { grid-template-columns: 1fr; }
+    .mock { height: 380px; max-width: 420px; margin: 0 auto; width: 100%; }
+    .phone { width: 200px; height: 390px; }
+    .problems, .steps, .features, .pricing { grid-template-columns: 1fr; }
+    .trust { grid-template-columns: 1fr 1fr; }
+    nav.top .links { display: none; }
+    section { padding: 56px 0; }
+  }
+  @media (max-width: 420px) { .phone.b { display: none; } .phone.a { left: 50%; transform: translateX(-50%) rotate(-3deg); } .trust { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<nav class="top">
+  <div class="wrap">
+    <a class="logo" href="#"><i><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff3dc"><path d="M15.5 2.5a6 6 0 0 1 3.2 11.1l-3.4 2.2-1.8 1.8a2.4 2.4 0 1 1-3.4 3.4 2.4 2.4 0 1 1-1.7-4.1 2.4 2.4 0 0 1 2-1.2l1.8-1.8 2.2-3.4A6 6 0 0 1 15.5 2.5Z"/></svg></i><span class="product">Stempelin</span></a>
+    <div class="links"><a href="#cara-kerja">Cara kerja</a><a href="#fitur">Fitur</a><a href="#owner">Laporan owner</a><a href="#harga">Harga</a></div>
+    <a class="btn dark" href="./?demo" style="padding:10px 16px">Coba demo</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Kartu member digital buat usaha kuliner</span>
+      <h1>Pelanggan balik lagi. <em>Kamu tahu siapa mereka.</em></h1>
+      <p class="lead">Ganti kartu stempel kertas dengan kartu digital di HP pelanggan. Kasir tinggal scan QR, owner langsung lihat siapa pelanggan setia dan menu apa yang paling laku.</p>
+      <div class="cta">
+        <a class="btn red" href="./?demo">Coba sebagai pelanggan</a>
+        <a class="btn ghost" href="./?demo&view=owner">Lihat dashboard owner</a>
+      </div>
+      <p class="hero-note">Demo pakai data contoh. Nggak perlu daftar, nggak perlu install apa-apa.</p>
+    </div>
+    <div class="mock" aria-hidden="true">
+      <div class="phone a"><div class="scr">
+        <small style="color:var(--muted);font-weight:700;font-size:10px;letter-spacing:.1em">MEMBER</small>
+        <h4>Halo, Rina!</h4>
+        <div class="mini-card">
+          <small>AYAM GARING JUARA</small>
+          <b>LOYALTY CARD</b>
+          <div class="st"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+        </div>
+        <div style="font-size:11px;display:flex;justify-content:space-between"><span>7 dari 10 stempel</span><b>3 lagi</b></div>
+        <div class="bar"><i></i></div>
+        <div class="rw"><b>1 Paket Ayam Geprek + Es Teh</b>Kumpulin 10 stempel, gratis.</div>
+      </div></div>
+      <div class="phone b"><div class="scr">
+        <h4>Laporan Oktober</h4>
+        <div class="k"><div><b>128</b>pelanggan datang</div><div><b>3.4×</b>rata-rata datang</div></div>
+        <div class="tm">
+          <div><span>Ayam Geprek <em style="font-style:normal">412</em></span><i style="width:100%"></i></div>
+          <div><span>Es Teh Manis <em style="font-style:normal">356</em></span><i style="width:86%"></i></div>
+          <div><span>Ayam Crispy <em style="font-style:normal">298</em></span><i style="width:72%"></i></div>
+          <div><span>Kentang Goreng <em style="font-style:normal">141</em></span><i style="width:34%;background:var(--mustard)"></i></div>
+        </div>
+        <div style="font-size:10.5px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px">
+          <b style="font-size:11.5px">Ayu Lestari</b> · 12× bulan ini<br><span style="color:var(--red-deep);font-weight:600">♥ Ayam Geprek</span>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Masalahnya</span>
+      <h2>Kartu stempel kertas bikin rugi diam-diam</h2>
+    </div>
+    <div class="problems">
+      <div class="problem"><b>Hilang & lecek</b><p>Kartu kertas ketinggalan di dompet lain atau kebuang. Pelanggan males mulai lagi dari nol.</p></div>
+      <div class="problem"><b>Gampang dicurangi</b><p>Stempel bisa dipalsu, atau dikasih dobel. Kamu nggak pernah tahu berapa hadiah yang “bocor”.</p></div>
+      <div class="problem"><b>Buta soal pelanggan</b><p>Siapa yang datang tiap minggu? Menu apa yang bikin orang balik? Semua cuma tebakan.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="dark-sec" id="cara-kerja">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker" style="color:var(--mustard)">Cara kerja</span>
+      <h2>Tiga langkah, nggak perlu install aplikasi</h2>
+      <p>Pelanggan cukup buka link di browser HP. Kasir pakai HP atau tablet yang udah ada.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><h3>Pelanggan daftar 10 detik</h3><p>Scan poster QR di kasir, isi nama & nomor HP, langsung dapat kartu digital plus bonus 1 stempel.</p><span class="who">Pelanggan</span></div>
+      <div class="step"><h3>Kasir scan & pilih menu</h3><p>Tiap beli, kasir scan QR di HP pelanggan, tap menu yang dipesan, kasih stempel. Stempel muncul di HP pelanggan dalam hitungan detik.</p><span class="who">Kasir</span></div>
+      <div class="step"><h3>Owner lihat laporan</h3><p>Siapa pelanggan paling setia, berapa kali mereka datang sebulan, dan menu favorit masing-masing.</p><span class="who">Owner</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="fitur">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Fitur</span>
+      <h2>Semua yang dibutuhin program member</h2>
+    </div>
+    <div class="features">
+      <div class="feature"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg></div><h3>Kartu digital 3D</h3><p>Kartu cantik dengan nama toko kamu, stempel yang terisi otomatis, dan level Member, Silver, Gold.</p></div>
+      <div class="feature"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg></div><h3>QR unik per pelanggan</h3><p>Bisa di-scan pakai kamera HP kasir apa aja, Android maupun iPhone. Bisa juga ketik ID member.</p></div>
+      <div class="feature"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg></div><h3>Laporan pelanggan</h3><p>Menu terlaris, kunjungan per bulan, menu favorit tiap orang, riwayat pesanan.</p></div>
+      <div class="feature"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Anti-curang</h3><p>Jeda minimal antar stempel buat member yang sama, dan semua stempel tercatat siapa kasirnya.</p></div>
+      <div class="feature"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg></div><h3>Akses sesuai peran</h3><p>Kasir cuma lihat nama & stempel. Nomor HP dan laporan cuma kebuka buat owner.</p></div>
+      <div class="feature"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div><h3>Atur sendiri</h3><p>Ganti nama toko, jumlah stempel, hadiah, dan daftar menu kapan aja dari dashboard.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="owner" style="background:var(--cream)">
+  <div class="wrap owner">
+    <div>
+      <span class="kicker">Buat owner</span>
+      <h2 style="font-size:clamp(30px,4.4vw,44px);font-weight:800">Kenal pelanggan setia kamu, satu per satu</h2>
+      <ul>
+        <li>Tahu menu yang bikin orang balik lagi, bukan cuma yang paling laku hari ini.</li>
+        <li>Lihat pelanggan yang dulu sering datang tapi mulai jarang, biar bisa disapa.</li>
+        <li>Ukur apakah promo bulan ini nambah kunjungan atau nggak.</li>
+        <li>Data pelanggan jadi aset toko, bukan cuma ada di ingatan kasir.</li>
+      </ul>
+      <div class="cta" style="margin-top:24px"><a class="btn dark" href="./?demo&view=owner">Buka dashboard owner (demo)</a></div>
+    </div>
+    <div class="report" aria-hidden="true">
+      <div class="rh"><b>Laporan pelanggan</b><span>Oktober 2026</span></div>
+      <div class="k"><div><b>128</b>pelanggan datang</div><div><b>436</b>kunjungan</div><div><b>3.4×</b>rata-rata datang</div></div>
+      <table>
+        <tr><td><b>Ayu Lestari</b><br><span class="fav">♥ Ayam Geprek</span></td><td>12×</td></tr>
+        <tr><td><b>Rina Putri</b><br><span class="fav">♥ Ayam Geprek</span></td><td>9×</td></tr>
+        <tr><td><b>Nadia Rahma</b><br><span class="fav">♥ Ayam Bakar Madu</span></td><td>8×</td></tr>
+        <tr><td><b>Andi Wijaya</b><br><span class="fav">♥ Ayam Crispy</span></td><td>7×</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Aman & patuh aturan</span>
+      <h2>Data pelanggan dijaga dengan serius</h2>
+    </div>
+    <div class="trust">
+      <div><b>Persetujuan jelas</b>Pelanggan centang persetujuan sebelum daftar, sesuai UU PDP No. 27/2022.</div>
+      <div><b>Bisa hapus sendiri</b>Pelanggan bisa hapus kartu & semua datanya kapan aja, satu tombol.</div>
+      <div><b>Akses dibatasi</b>Aturan keamanan di database: kasir nggak bisa lihat nomor HP atau laporan.</div>
+      <div><b>Data cuma milik toko</b>Nggak dijual, nggak dibagi ke pihak lain buat iklan.</div>
+    </div>
+  </div>
+</section>
+
+<section id="harga" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Harga</span>
+      <h2>Lebih murah dari cetak kartu stempel tiap bulan</h2>
+    </div>
+    <div class="pricing">
+      <div class="plan">
+        <h3>Coba dulu</h3>
+        <div class="price">Gratis</div><div class="per">14 hari, 1 outlet</div>
+        <ul><li>Semua fitur</li><li>Bantu setup menu & poster QR</li><li>Tanpa kartu kredit</li></ul>
+      </div>
+      <div class="plan hot">
+        <span class="tag">Paling pas</span>
+        <h3>Outlet</h3>
+        <div class="price">Rp149rb</div><div class="per">per outlet / bulan</div>
+        <ul><li>Member & kasir tanpa batas</li><li>Laporan pelanggan lengkap</li><li>Anti-curang & atur akses kasir</li><li>Poster QR siap cetak</li></ul>
+      </div>
+      <div class="plan">
+        <span class="tag" style="background:var(--line)">Segera</span>
+        <h3>Multi-cabang</h3>
+        <div class="price">Daftar tunggu</div><div class="per">3 outlet ke atas</div>
+        <ul><li>Laporan gabungan semua cabang</li><li>Kartu berlaku di semua cabang</li><li>Pendampingan onboarding</li></ul>
+      </div>
+    </div>
+    <p class="price-note">Harga belum termasuk PPN.</p>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head" style="margin-bottom:20px">
+      <span class="kicker">Segera hadir</span>
+      <h2 style="font-size:clamp(24px,3.4vw,32px)">Yang lagi kami siapkan</h2>
+    </div>
+    <div class="roadmap">
+      <span>Pengingat otomatis via WhatsApp</span>
+      <span>Promo ulang tahun pelanggan</span>
+      <span>Simpan ke Google Wallet & Apple Wallet</span>
+      <span>Verifikasi nomor HP (OTP)</span>
+      <span>Catat nominal belanja & poin</span>
+      <span>Export Excel</span>
+    </div>
+  </div>
+</section>
+
+<section class="final" style="background:var(--surface);border-top:1px solid var(--line)">
+  <div class="wrap">
+    <h2>Coba sekarang, rasain dari dua sisi</h2>
+    <p>Buka demo di HP sebagai pelanggan, lalu buka di laptop sebagai kasir atau owner.</p>
+    <div class="cta">
+      <a class="btn red" href="./?demo">Coba sebagai pelanggan</a>
+      <a class="btn dark" href="./?demo&view=kasir">Coba sebagai kasir</a>
+      <a class="btn ghost" href="poster.html?demo">Lihat poster QR</a>
+    </div>
+  </div>
+</section>
+
+<footer><span class="product">Stempelin</span> · Kartu member digital · <a href="privasi.html">Kebijakan Privasi</a></footer>
+
+<script>
+// Ganti nama produk di satu tempat ini.
+const PRODUCT_NAME = "Stempelin";
+document.querySelectorAll(".product").forEach((el) => (el.textContent = PRODUCT_NAME));
+document.title = PRODUCT_NAME + " · Kartu Member Digital";
+</script>
+</body>
+</html>

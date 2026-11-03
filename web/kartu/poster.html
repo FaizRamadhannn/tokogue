@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poster QR Member</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="demo.js"></script>
+<style>
+  :root { --bg: #f6efe4; --ink: #1c1210; --muted: #75645a; --red: #c8231c; --red-deep: #8f130e; --mustard: #f4b223; --cream: #fff3dc; --line: #e8dccb; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9e1d4; font-family: "Plus Jakarta Sans", system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  .fit { width: 100%; overflow: hidden; padding: 0 12px; }
+  .bar { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; padding: 14px 16px; font-size: 14px; }
+  .bar button, .bar a { border: 0; border-radius: 12px; padding: 10px 16px; font-weight: 700; font-size: 14px; cursor: pointer; text-decoration: none; }
+  .bar button { background: var(--ink); color: #fff; }
+  .bar a { background: #fff; color: var(--ink); }
+  .bar span { color: var(--muted); }
+  /* A5 potret */
+  .poster { width: 148mm; height: 210mm; margin: 0 auto 32px; background: var(--red); color: var(--cream); border-radius: 6mm; overflow: hidden; position: relative; padding: 13mm 12mm 11mm; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 20px 50px -20px rgba(60,10,5,.45); }
+  .poster::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.08) 1.3px, transparent 1.4px); background-size: 5mm 5mm; mask-image: linear-gradient(160deg, #000 0%, transparent 55%); }
+  .store { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 6.2mm; letter-spacing: -0.02em; position: relative; }
+  .kicker { font-size: 3mm; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; opacity: .8; margin-top: 1mm; position: relative; }
+  h1 { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 13mm; line-height: .95; letter-spacing: -0.04em; margin: 7mm 0 4mm; position: relative; }
+  .reward { background: var(--mustard); color: var(--ink); border-radius: 99mm; padding: 2mm 5mm; font-weight: 700; font-size: 3.6mm; position: relative; }
+  .qr { background: #fff; border-radius: 5mm; padding: 4mm; margin: 7mm 0 5mm; position: relative; line-height: 0; }
+  .qr img, .qr canvas { width: 62mm !important; height: 62mm !important; image-rendering: pixelated; }
+  .steps { display: flex; gap: 3mm; width: 100%; position: relative; margin-top: auto; }
+  .steps div { flex: 1; background: rgba(255,243,220,.12); border-radius: 3mm; padding: 3mm 2mm; font-size: 3mm; line-height: 1.35; font-weight: 600; }
+  .steps b { display: block; font-family: "Bricolage Grotesque", sans-serif; font-size: 6mm; color: var(--mustard); line-height: 1; margin-bottom: 1mm; }
+  .scan { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 6mm; letter-spacing: -0.02em; position: relative; }
+  .url { font-size: 2.6mm; opacity: .7; margin-top: 1mm; position: relative; word-break: break-all; }
+  @media print {
+    @page { size: A5 portrait; margin: 0; }
+    body { background: none; }
+    .bar { display: none; }
+    .fit { padding: 0; overflow: visible; }
+    .poster { margin: 0; border-radius: 0; box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+  @media print { .poster { zoom: 1 !important; } }
+</style>
+</head>
+<body>
+<div class="bar">
+  <button onclick="window.print()">Cetak poster (A5)</button>
+  <a href="./" id="backLink">Kembali</a>
+  <span>Taruh di meja kasir. Pelanggan scan → daftar → dapat kartu.</span>
+</div>
+
+<div class="fit" id="fit"><div class="poster">
+  <div class="store" id="store">Kartu Member</div>
+  <div class="kicker">Program member</div>
+  <h1>Jajan di sini,<br>dapat gratisan.</h1>
+  <div class="reward" id="reward">Kumpulin stempel, dapat hadiah</div>
+  <div class="qr" id="qr"></div>
+  <div class="scan">Scan buat jadi member</div>
+  <div class="url" id="url"></div>
+  <div class="steps">
+    <div><b>1</b>Scan QR pakai kamera HP</div>
+    <div><b>2</b>Isi nama & nomor HP</div>
+    <div><b>3</b>Tunjukin kartu tiap beli</div>
+  </div>
+</div></div>
+
+<script>
+// Di layar HP, perkecil tampilan poster biar muat (ukuran cetak tetap A5).
+const fit = () => {
+  const p = document.querySelector(".poster");
+  p.style.zoom = 1;
+  const s = Math.min(1, (document.getElementById("fit").clientWidth - 24) / p.offsetWidth);
+  p.style.zoom = s;
+};
+window.addEventListener("resize", fit);
+fit();
+
+(async () => {
+  const DEMO = new URLSearchParams(location.search).has("demo");
+  const base = location.origin + location.pathname.replace(/poster\.html$/, "");
+  const joinUrl = base + (DEMO ? "?demo" : "");
+  document.getElementById("backLink").href = joinUrl;
+  document.getElementById("url").textContent = joinUrl.replace(/^https?:\/\//, "");
+  new QRCode(document.getElementById("qr"), { text: joinUrl, width: 512, height: 512, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+  try {
+    const sb = DEMO ? window.createDemoClient() : window.supabase.createClient("https://sinxdbpbmodmtxzphgyx.supabase.co", "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC");
+    const { data } = await sb.from("loyalty_settings").select("store, target, reward").eq("id", 1).single();
+    if (data) {
+      document.getElementById("store").textContent = data.store;
+      document.getElementById("reward").textContent = `${data.target} stempel = ${data.reward}`;
+      document.title = "Poster QR · " + data.store;
+    }
+  } catch {}
+})();
+</script>
+</body>
+</html>

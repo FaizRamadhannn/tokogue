@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Kartu Loyalitas</title>
+<title>Kartu Member</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" defer></script>
+<script src="demo.js"></script>
 <style>
   :root {
     --bg: #f6efe4;
@@ -127,7 +128,7 @@
   }
   .back::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 8px; background: var(--red); }
   .qr-box { background: #fff; padding: 8px; border-radius: 12px; border: 1px solid var(--line); line-height: 0; }
-  .qr-box img, .qr-box canvas { width: clamp(96px, 26vw, 128px) !important; height: auto !important; display: block; }
+  .qr-box img, .qr-box canvas { width: clamp(108px, 30vw, 150px) !important; height: auto !important; display: block; image-rendering: pixelated; }
   .back h3 { font-family: var(--display); font-weight: 800; font-size: clamp(16px, 4.4vw, 20px); margin: 0 0 6px; letter-spacing: -0.02em; line-height: 1.1; }
   .back p { margin: 0 0 10px; color: var(--muted); font-size: 12px; line-height: 1.45; }
   .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; font-size: 13px; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; display: inline-block; letter-spacing: .06em; }
@@ -286,25 +287,122 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }
+  /* ---------- tambahan: demo, QR besar, scanner, laporan ---------- */
+  .demo-bar { background: var(--ink); color: #fff; font-size: 13px; }
+  .demo-bar .in { max-width: 1080px; margin: 0 auto; padding: 8px 16px; display: flex; gap: 8px 14px; align-items: center; flex-wrap: wrap; }
+  .demo-bar b { color: var(--mustard); }
+  .demo-bar span { flex: 1; min-width: 180px; opacity: .85; }
+  .demo-bar a, .demo-bar button { color: #fff; background: rgba(255,255,255,.12); border: 0; border-radius: 8px; padding: 5px 10px; font-size: 12.5px; font-weight: 600; text-decoration: none; }
+  .demo-bar a:hover, .demo-bar button:hover { background: rgba(255,255,255,.22); }
+
+  .qr-actions { display: flex; gap: 8px; width: min(100%, 420px); }
+  .qr-actions .btn { flex: 1; }
+
+  .modal { position: fixed; inset: 0; z-index: 60; background: rgba(28, 18, 16, .6); display: grid; place-items: center; padding: 16px; animation: fade .2s ease; }
+  @keyframes fade { from { opacity: 0; } }
+  .sheet { background: var(--surface); border-radius: 22px; width: min(100%, 560px); max-height: calc(100vh - 32px); overflow: auto; padding: 22px; position: relative; }
+  .sheet.qr-sheet { background: #fff; width: min(100%, 380px); text-align: center; padding: 26px 22px 22px; }
+  .sheet .close { position: absolute; top: 12px; right: 12px; }
+  .qr-big { display: grid; place-items: center; margin: 6px auto 14px; }
+  .qr-big img, .qr-big canvas { width: min(72vw, 280px) !important; height: auto !important; image-rendering: pixelated; }
+  .qr-sheet h3 { font-family: var(--display); font-size: 22px; margin: 0 0 2px; letter-spacing: -0.02em; }
+  .qr-sheet .code { font-size: 16px; margin-top: 6px; }
+  .qr-sheet p { color: var(--muted); font-size: 13px; margin: 12px 0 0; }
+
+  .cam-wrap { position: relative; margin-top: 10px; border-radius: 14px; overflow: hidden; background: #000; aspect-ratio: 4 / 3; }
+  .cam-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cam-frame { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+  .cam-frame i { width: 62%; aspect-ratio: 1; border-radius: 18px; box-shadow: 0 0 0 9999px rgba(0,0,0,.35); border: 3px solid rgba(255,255,255,.9); }
+  .cam-status { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; color: #fff; font-size: 13px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
+
+  .report { margin-top: 20px; }
+  .rep-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .rep-head h2 { margin: 0; }
+  .month-nav { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+  .month-nav button { border: 0; background: transparent; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; line-height: 1; }
+  .month-nav button:hover:not(:disabled) { background: var(--cream); }
+  .month-nav button:disabled { opacity: .3; }
+  .month-nav b { min-width: 130px; text-align: center; font-size: 14px; }
+  .rep-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .rep-kpi { border-radius: 14px; padding: 12px 14px; background: #fff; border: 1px solid var(--line); }
+  .rep-kpi small { color: var(--muted); font-size: 12.5px; font-weight: 600; display: block; }
+  .rep-kpi b { font-family: var(--display); font-size: 26px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .rep-kpi em { font-style: normal; color: var(--muted); font-size: 12px; display: block; }
+  .rep-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
+  .top-menu { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .top-menu li { font-size: 14px; }
+  .top-menu .tm-row { display: flex; gap: 8px; align-items: baseline; }
+  .top-menu .tm-rank { width: 18px; color: var(--muted); font-weight: 700; }
+  .top-menu li:nth-child(-n+3) .tm-rank { color: var(--red); }
+  .top-menu .tm-name { flex: 1; font-weight: 600; }
+  .top-menu .tm-qty { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .top-menu .tm-bar { margin: 6px 0 0 26px; height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .top-menu .tm-bar i { display: block; height: 100%; background: var(--red); border-radius: inherit; }
+  .top-menu li:nth-child(n+4) .tm-bar i { background: var(--mustard); }
+  .top-menu .tm-sub { margin-left: 26px; color: var(--muted); font-size: 12px; }
+  .visits-n { font-family: var(--display); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .visits-n.zero { color: var(--muted); }
+  .fav { display: inline-block; font-size: 12px; font-weight: 600; color: var(--red-deep); background: #fdecea; border-radius: 99px; padding: 3px 8px; white-space: nowrap; }
+  tr.click { cursor: pointer; }
+  tr.click:hover td { background: var(--cream); }
+
+  .det-head { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; padding-right: 40px; }
+  .det-head .avatar { width: 48px; height: 48px; font-size: 17px; }
+  .det-head h3 { font-family: var(--display); font-size: 21px; margin: 0; letter-spacing: -0.02em; }
+  .det-head small { color: var(--muted); }
+  .det-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+  .det-stats div { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .det-stats small { color: var(--muted); font-size: 12px; display: block; }
+  .det-stats b { font-family: var(--display); font-size: 20px; }
+  .det h4 { font-size: 14px; margin: 0 0 10px; }
+  .bars { display: flex; align-items: flex-end; gap: 8px; height: 120px; margin-bottom: 18px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+  .bars div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; font-size: 12px; }
+  .bars i { width: 70%; max-width: 26px; border-radius: 6px; background: var(--mustard); min-height: 4px; }
+  .bars div:last-child i { background: var(--red); }
+  .bars span { color: var(--muted); }
+  .det-list { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .det-list li { display: flex; gap: 10px; align-items: baseline; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
+  .det-list li time { color: var(--muted); font-size: 12.5px; width: 92px; flex: none; }
+  .det-list .items { display: flex; flex-wrap: wrap; gap: 4px; }
+  .det-list .items span { background: var(--bg); border-radius: 6px; padding: 2px 7px; font-size: 12.5px; }
+
+  .demo-login { display: flex; flex-direction: column; gap: 10px; }
+  .demo-login .btn { padding: 14px 16px; }
+  .demo-login small { color: var(--muted); font-weight: 500; display: block; font-size: 12px; }
+
+  @media (max-width: 900px) {
+    .rep-grid { grid-template-columns: 1fr; }
+    .rep-kpis { grid-template-columns: repeat(2, 1fr); }
+  }
 </style>
+
 </head>
 <body>
+
+<div class="demo-bar" id="demoBar" hidden>
+  <div class="in">
+    <span><b>Mode demo</b> · data contoh, bebas dicoba. Nggak nyentuh data asli.</span>
+    <a href="produk.html">Tentang produk</a>
+    <button id="demoReset" type="button">Reset data</button>
+    <a href="./">Keluar demo</a>
+  </div>
+</div>
 
 <header class="top">
   <div class="top-inner">
     <div class="brand">
       <div class="brand-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff3dc"><path d="M15.5 2.5a6 6 0 0 1 3.2 11.1l-3.4 2.2-1.8 1.8a2.4 2.4 0 1 1-3.4 3.4 2.4 2.4 0 1 1-1.7-4.1 2.4 2.4 0 0 1 2-1.2l1.8-1.8 2.2-3.4A6 6 0 0 1 15.5 2.5Z"/></svg></div>
-      <span class="brand-name" id="brandName">Ayam Garing Juara</span>
+      <span class="brand-name" id="brandName">Kartu Member</span>
     </div>
     <nav class="tabs" role="tablist">
       <button class="tab" role="tab" aria-selected="true" data-view="customer">Kartu Saya</button>
-      <button class="tab" role="tab" aria-selected="false" data-view="dashboard">Dashboard</button>
+      <button class="tab" role="tab" aria-selected="false" data-view="dashboard">Kasir & Owner</button>
     </nav>
   </div>
 </header>
 
 <main>
-  <!-- ============ CUSTOMER ============ -->
+  <!-- ============ PELANGGAN ============ -->
   <section class="view" id="view-customer">
     <div class="customer">
       <div class="stage">
@@ -317,7 +415,7 @@
           <div class="card3d" id="card" role="button" tabindex="0" aria-label="Balik kartu">
             <div class="face front">
               <div class="front-top">
-                <div class="store"><span id="storeName">Ayam Garing Juara</span></div>
+                <div class="store"><span id="storeName">Kartu Member</span></div>
                 <div class="chip" id="tierChip">Member</div>
               </div>
               <div class="card-title">LOYALTY CARD</div>
@@ -335,13 +433,19 @@
                 <p>Kasir scan QR ini tiap kamu beli, dapat 1 stempel.</p>
                 <span class="code" id="backCode">—</span>
               </div>
-              <div class="glare"></div>
             </div>
           </div>
         </div>
-        <div class="hint">
+
+        <div class="qr-actions" id="qrActions" hidden>
+          <button class="btn dark" id="showQr" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>
+            Tampilkan QR ke kasir
+          </button>
+        </div>
+        <div class="hint" id="flipHint">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
-          Tap kartu buat lihat QR code
+          Tap kartu buat balik
         </div>
 
         <div class="progress-wrap">
@@ -368,6 +472,7 @@
             </label>
             <button class="btn block" type="submit" id="joinBtn">Buat kartu</button>
           </form>
+          <button class="btn block ghost" id="demoSample" type="button" style="margin-top:10px" hidden>Lihat kartu contoh</button>
         </div>
         <div id="ownedBox" hidden>
           <h2>Simpan kartu kamu</h2>
@@ -385,21 +490,28 @@
     </div>
   </section>
 
-  <!-- ============ DASHBOARD ============ -->
+  <!-- ============ KASIR & OWNER ============ -->
   <section class="view" id="view-dashboard" hidden>
-    <!-- login -->
-    <div id="loginBox" class="panel" style="max-width:400px;margin:24px auto">
-      <h2>Masuk pakai akun tokogue</h2>
-      <p id="loginHint">Nomor HP & password yang sama dengan aplikasi tokogue. Kasir bisa kasih stempel; atasan juga bisa atur menu & lihat member.</p>
-      <form id="loginForm">
-        <div class="field"><label for="lPhone">Nomor HP</label><input id="lPhone" required inputmode="tel" placeholder="08xx xxxx xxxx" autocomplete="username"></div>
-        <div class="field"><label for="lPass">Password</label><input id="lPass" type="password" required minlength="6" autocomplete="current-password"></div>
-        <button class="btn dark block" type="submit">Masuk</button>
-      </form>
-      <div id="loginMsg" style="margin-top:12px"></div>
+    <div id="loginBox" class="panel" style="max-width:420px;margin:24px auto">
+      <div id="loginNote"></div>
+      <div id="realLogin">
+        <h2>Masuk kasir / owner</h2>
+        <p>Pakai nomor HP & password akun tokogue. Kasir bisa kasih stempel; owner juga bisa lihat laporan pelanggan, atur menu & aturan program.</p>
+        <form id="loginForm">
+          <div class="field"><label for="lPhone">Nomor HP</label><input id="lPhone" required inputmode="tel" placeholder="08xx xxxx xxxx" autocomplete="username"></div>
+          <div class="field"><label for="lPass">Password</label><input id="lPass" type="password" required minlength="6" autocomplete="current-password"></div>
+          <button class="btn dark block" type="submit">Masuk</button>
+        </form>
+        <div id="loginMsg" style="margin-top:12px"></div>
+      </div>
+      <div id="demoLogin" class="demo-login" hidden>
+        <h2>Coba sebagai…</h2>
+        <p style="color:var(--muted);margin:0 0 6px;font-size:14px">Mode demo nggak butuh password.</p>
+        <button class="btn block" data-demo-login="kasir" type="button"><span>Kasir<small style="color:#ffe2df">Scan kartu, pilih menu, kasih stempel</small></span></button>
+        <button class="btn block dark" data-demo-login="owner" type="button"><span>Owner<small style="color:#d9cbc5">+ laporan pelanggan, menu, aturan program</small></span></button>
+      </div>
     </div>
 
-    <!-- logged in but not owner -->
     <div id="notOwnerBox" class="panel" style="max-width:400px;margin:24px auto" hidden>
       <h2>Akun belum bisa dipakai</h2>
       <p>Akun tokogue ini belum aktif (masih nunggu approval HR) atau sudah ditolak.</p>
@@ -407,113 +519,180 @@
     </div>
 
     <div id="dashBox" hidden>
-    <div class="dash-head">
-      <div>
-        <h1 id="dashTitle">Kasir Loyalty</h1>
-        <p id="dashSub">Scan kartu pelanggan, pilih menu yang dipesan, kasih stempel.</p>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn ghost" id="refreshBtn">Muat ulang</button>
-        <button class="btn ghost" data-logout>Keluar</button>
-      </div>
-    </div>
-
-    <div class="kpis" data-mgr>
-      <div class="kpi"><small>Total member</small><b id="kMembers">0</b></div>
-      <div class="kpi"><small>Stempel hari ini</small><b id="kToday">0</b></div>
-      <div class="kpi"><small>Siap tukar hadiah</small><b id="kReady">0</b></div>
-      <div class="kpi"><small>Hadiah ditukar</small><b id="kRedeemed">0</b></div>
-    </div>
-
-    <div class="dash-grid" id="dashGrid">
-      <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
-        <div class="panel" id="scanPanel">
-          <h2>Scan member</h2>
-          <p>Ketik ID member dari kartu (atau scan QR pakai kamera kalau browser-nya mendukung).</p>
-          <form id="scanForm" style="display:flex;gap:8px">
-            <input class="search" id="scanInput" placeholder="cth. LC-7K2QX" style="flex:1;width:auto;max-width:none;text-transform:uppercase" autocomplete="off">
-            <button class="btn dark" type="submit">Cari</button>
-          </form>
-          <button class="btn ghost block" id="camBtn" style="margin-top:8px" hidden>Scan pakai kamera</button>
-          <video id="camVideo" playsinline muted style="width:100%;border-radius:12px;margin-top:8px;display:none"></video>
-          <div class="scan-result" id="scanResult"></div>
+      <div class="dash-head">
+        <div>
+          <h1 id="dashTitle">Kasir</h1>
+          <p id="dashSub">Scan kartu pelanggan, pilih menu yang dipesan, kasih stempel.</p>
         </div>
-
-        <div class="panel" data-mgr>
-          <h2>Daftar menu</h2>
-          <p>Menu yang bisa dipilih kasir. Menu yang disembunyikan tetap tercatat di laporan.</p>
-          <form id="menuForm" style="display:flex;gap:8px;margin-bottom:12px">
-            <input class="search" id="menuInput" placeholder="Nama menu baru" maxlength="60" style="flex:1;width:auto;max-width:none" autocomplete="off">
-            <button class="btn dark" type="submit">Tambah</button>
-          </form>
-          <div class="menu-admin" id="menuAdmin"></div>
-        </div>
-
-        <div class="panel" data-mgr>
-          <h2>Aturan program</h2>
-          <p>Berlaku buat semua kartu.</p>
-          <form id="settingsForm">
-            <div class="field"><label for="sStore">Nama toko</label><input id="sStore" maxlength="60"></div>
-            <div class="field"><label for="sTarget">Stempel buat 1 hadiah</label><input id="sTarget" type="number" min="3" max="15"></div>
-            <div class="field"><label for="sReward">Hadiahnya</label><input id="sReward" maxlength="120"></div>
-            <button class="btn block dark" type="submit">Simpan</button>
-          </form>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn ghost" id="posterLink" href="poster.html" target="_blank" rel="noopener" data-mgr style="text-decoration:none">Poster QR</a>
+          <button class="btn ghost" id="refreshBtn">Muat ulang</button>
+          <button class="btn ghost" data-logout id="logoutBtn">Keluar</button>
         </div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:20px;min-width:0" data-mgr>
-        <div class="table-wrap">
-          <div class="table-tools">
-            <h2>Member</h2>
-            <input class="search" id="search" placeholder="Cari nama / ID / HP">
+      <div class="kpis" data-mgr>
+        <div class="kpi"><small>Total member</small><b id="kMembers">0</b></div>
+        <div class="kpi"><small>Stempel hari ini</small><b id="kToday">0</b></div>
+        <div class="kpi"><small>Siap tukar hadiah</small><b id="kReady">0</b></div>
+        <div class="kpi"><small>Hadiah ditukar</small><b id="kRedeemed">0</b></div>
+      </div>
+
+      <div class="dash-grid" id="dashGrid">
+        <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+          <div class="panel" id="scanPanel">
+            <h2>Scan kartu member</h2>
+            <p>Arahkan kamera ke QR di HP pelanggan, atau ketik ID member-nya.</p>
+            <button class="btn block" id="camBtn" type="button" hidden>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/></svg>
+              <span>Scan pakai kamera</span>
+            </button>
+            <div class="cam-wrap" id="camWrap" hidden>
+              <video id="camVideo" playsinline muted autoplay></video>
+              <div class="cam-frame"><i></i></div>
+              <div class="cam-status" id="camStatus">Arahkan ke QR di kartu pelanggan</div>
+            </div>
+            <form id="scanForm" style="display:flex;gap:8px;margin-top:10px">
+              <input class="search" id="scanInput" placeholder="ID member, cth. LC-7K2QX" style="flex:1;width:auto;max-width:none;text-transform:uppercase" autocomplete="off">
+              <button class="btn dark" type="submit">Cari</button>
+            </form>
+            <div class="scan-result" id="scanResult"></div>
           </div>
-          <div style="overflow-x:auto">
-            <table>
-              <thead><tr><th>Member</th><th>Stempel</th><th class="col-hide">Terakhir datang</th><th></th></tr></thead>
-              <tbody id="rows"></tbody>
-            </table>
+
+          <div class="panel" data-mgr>
+            <h2>Daftar menu</h2>
+            <p>Menu yang bisa dipilih kasir. Menu yang disembunyikan tetap tercatat di laporan.</p>
+            <form id="menuForm" style="display:flex;gap:8px;margin-bottom:12px">
+              <input class="search" id="menuInput" placeholder="Nama menu baru" maxlength="60" style="flex:1;width:auto;max-width:none" autocomplete="off">
+              <button class="btn dark" type="submit">Tambah</button>
+            </form>
+            <div class="menu-admin" id="menuAdmin"></div>
+          </div>
+
+          <div class="panel" data-mgr>
+            <h2>Aturan program</h2>
+            <p>Berlaku buat semua kartu.</p>
+            <form id="settingsForm">
+              <div class="field"><label for="sStore">Nama toko</label><input id="sStore" maxlength="60"></div>
+              <div class="field"><label for="sTarget">Stempel buat 1 hadiah</label><input id="sTarget" type="number" min="3" max="15"></div>
+              <div class="field"><label for="sReward">Hadiahnya</label><input id="sReward" maxlength="120"></div>
+              <div class="field"><label for="sCooldown">Jeda minimal antar stempel (menit)</label><input id="sCooldown" type="number" min="0" max="240"><small style="color:var(--muted);font-size:12px">Anti-curang: member yang sama nggak bisa dapat stempel lagi sebelum jeda ini lewat. 0 = tanpa jeda.</small></div>
+              <button class="btn block dark" type="submit">Simpan</button>
+            </form>
           </div>
         </div>
 
-        <div class="panel">
-          <h2>Aktivitas terbaru</h2>
-          <p style="margin-bottom:12px">Laporan lengkap (menu terlaris, kunjungan per bulan) ada di aplikasi tokogue → Pelanggan.</p>
-          <ul class="activity" id="activity"></ul>
+        <div style="display:flex;flex-direction:column;gap:20px;min-width:0" data-mgr>
+          <div class="table-wrap">
+            <div class="table-tools">
+              <h2>Member</h2>
+              <input class="search" id="search" placeholder="Cari nama / ID / HP">
+            </div>
+            <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
+              <table>
+                <thead><tr><th>Member</th><th>Stempel</th><th class="col-hide">Terakhir datang</th><th></th></tr></thead>
+                <tbody id="rows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Aktivitas terbaru</h2>
+            <p style="margin-bottom:12px">Stempel, hadiah, dan member baru.</p>
+            <ul class="activity" id="activity"></ul>
+          </div>
         </div>
       </div>
-    </div>
+
+      <!-- Laporan pelanggan (owner) -->
+      <div class="panel report" id="reportPanel" data-mgr>
+        <div class="rep-head">
+          <div>
+            <h2>Laporan pelanggan</h2>
+            <p style="margin:2px 0 0;color:var(--muted);font-size:14px">Menu terlaris & seberapa sering pelanggan datang.</p>
+          </div>
+          <div class="month-nav">
+            <button id="repPrev" type="button" aria-label="Bulan sebelumnya">‹</button>
+            <b id="repMonth">—</b>
+            <button id="repNext" type="button" aria-label="Bulan berikutnya">›</button>
+          </div>
+        </div>
+        <div class="rep-kpis">
+          <div class="rep-kpi"><small>Pelanggan datang</small><b id="rActive">0</b><em id="rActiveSub"></em></div>
+          <div class="rep-kpi"><small>Total kunjungan</small><b id="rVisits">0</b><em>stempel diberikan</em></div>
+          <div class="rep-kpi"><small>Rata-rata datang</small><b id="rAvg">0×</b><em>per pelanggan</em></div>
+          <div class="rep-kpi"><small>Member baru</small><b id="rNew">0</b><em id="rNewSub"></em></div>
+        </div>
+        <div class="rep-grid">
+          <div>
+            <h4 style="margin:0 0 12px;font-size:15px">Menu paling sering dipesan</h4>
+            <ul class="top-menu" id="rTop"></ul>
+          </div>
+          <div class="table-wrap">
+            <div class="table-tools">
+              <h2>Pelanggan</h2>
+              <input class="search" id="rSearch" placeholder="Cari nama / HP">
+            </div>
+            <div style="overflow-x:auto;max-height:440px;overflow-y:auto">
+              <table>
+                <thead><tr><th>Pelanggan</th><th>Datang</th><th class="col-hide">Menu favorit</th><th class="col-hide">Terakhir</th></tr></thead>
+                <tbody id="rRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 </main>
 
+<div id="modalRoot"></div>
 <div class="toast" id="toast"></div>
 
 <script>
 // ===== Project Supabase tokogue (sama dengan tokogue_app/lib/config.dart) =====
 const SUPABASE_URL = "https://sinxdbpbmodmtxzphgyx.supabase.co";
-const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publishable key project tokogue — memang aman ditaruh di halaman
+const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publishable key — memang aman ditaruh di halaman
 // =====================================================================
 
 (() => {
-  const TOKEN_KEY = "loyalty-card-token";
+  const params = new URLSearchParams(location.search);
+  const DEMO = params.has("demo");
+  const TOKEN_KEY = DEMO ? "loyalty-card-token-demo" : "loyalty-card-token";
+  const BASE = location.origin + location.pathname;
   const DRUM = '<svg viewBox="0 0 24 24" fill="#c8231c"><path d="M15.5 2.5a6 6 0 0 1 3.2 11.1l-3.4 2.2-1.8 1.8a2.4 2.4 0 1 1-3.4 3.4 2.4 2.4 0 1 1-1.7-4.1 2.4 2.4 0 0 1 2-1.2l1.8-1.8 2.2-3.4A6 6 0 0 1 15.5 2.5Z"/></svg>';
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const initials = (n) => n.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
   const day = 864e5;
   const ago = (iso) => {
+    if (!iso) return "belum pernah";
     const m = Math.round((Date.now() - new Date(iso)) / 6e4);
     if (m < 1) return "baru saja";
     if (m < 60) return m + " mnt lalu";
     const h = Math.round(m / 60);
     if (h < 24) return h + " jam lalu";
-    return Math.round(h / 24) + " hari lalu";
+    const d = Math.round(h / 24);
+    return d === 1 ? "kemarin" : d + " hari lalu";
   };
   const hhmm = (iso) => {
     const d = new Date(iso);
     return Date.now() - d < day ? d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
   };
-  // Token kartu disimpan di HP; kalau penyimpanan browser diblok, tetap dipegang selama halaman terbuka.
+  const fmtDateTime = (iso) => new Date(iso).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  const monthLabel = (d) => d.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+  const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+
+  // Link di QR kartu: kalau di-scan kamera HP biasa, langsung buka layar kasir dengan member ini.
+  const scanUrl = (code) => BASE + (DEMO ? "?demo&scan=" : "?scan=") + encodeURIComponent(code);
+  const cardLink = (token) => BASE + (DEMO ? "?demo&card=" : "?card=") + encodeURIComponent(token);
+  // Ambil ID member dari isi QR: link baru (?scan=), format lama (LOYALTY:), atau ID polos.
+  const extractCode = (text) => {
+    const t = String(text || "").trim();
+    const m = t.match(/[?&]scan=([A-Za-z0-9-]+)/) || t.match(/^LOYALTY:([A-Za-z0-9-]+)$/i) || t.match(/^(LC-[A-Za-z0-9]+)$/i);
+    return m ? decodeURIComponent(m[1]).toUpperCase() : null;
+  };
+
   let memToken = null;
   const store = {
     get: () => { try { return localStorage.getItem(TOKEN_KEY) || memToken; } catch { return memToken; } },
@@ -525,17 +704,20 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
     "Could not find the function": "Server belum diperbarui. Admin: jalankan ulang supabase/loyalty.sql (repo tokogue).",
     invalid_phone: "Nomor HP-nya belum bener.",
     invalid_name: "Nama wajib diisi (maks 60 huruf).",
-    not_staff: "Akun ini bukan karyawan aktif tokogue.",
-    not_manager: "Cuma atasan yang bisa lihat ini.",
+    not_staff: "Akun ini bukan karyawan aktif.",
+    not_manager: "Cuma owner yang bisa lihat ini.",
     invalid_items: "Ada menu yang nggak valid. Muat ulang lalu coba lagi.",
     duplicate: "Menu itu sudah ada.",
     card_full_or_missing: "Kartu sudah penuh, tukar hadiah dulu.",
     not_ready: "Stempel belum cukup buat tukar hadiah.",
+    "check constraint": "Nilainya di luar batas yang dibolehkan.",
     "Invalid login credentials": "Nomor HP atau password salah.",
-    "Email not confirmed": "Akun tokogue ini belum dikonfirmasi.",
+    "Email not confirmed": "Akun ini belum dikonfirmasi.",
   };
   const errText = (e) => {
     const msg = e?.message || String(e);
+    const soon = msg.match(/too_soon:(\d+)/);
+    if (soon) return `Member ini baru aja dapat stempel. Bisa lagi dalam ${soon[1]} menit (anti-curang).`;
     const k = Object.keys(ERR).find((k) => msg.includes(k));
     return k ? ERR[k] : "Ada masalah: " + msg;
   };
@@ -543,7 +725,7 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
   const toast = (msg) => {
     const el = $("#toast");
     el.textContent = msg; el.classList.add("show");
-    clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2600);
+    clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 3000);
   };
   const confetti = () => {
     const box = document.createElement("div"); box.className = "confetti";
@@ -559,29 +741,57 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
     document.body.appendChild(box);
     setTimeout(() => box.remove(), 2600);
   };
-  const cardLink = (token) => location.origin + location.pathname + "?card=" + token;
-  const copy = async (text, ok) => {
-    try { await navigator.clipboard.writeText(text); toast(ok); }
+  const copy = async (text, okMsg) => {
+    try { await navigator.clipboard.writeText(text); toast(okMsg); }
     catch { prompt("Salin link ini:", text); }
   };
+  const drawQr = (el, text, size) => {
+    el.innerHTML = "";
+    if (window.QRCode) new QRCode(el, { text, width: size, height: size, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+    else el.textContent = text;
+  };
 
-  if (!SUPABASE_KEY || !window.supabase) {
-    document.querySelector("main").innerHTML = `
-      <div class="panel" style="max-width:520px;margin:40px auto">
-        <h2>Belum tersambung ke Supabase</h2>
-        <p>Buka file <b>index.html</b>, isi <code>SUPABASE_KEY</code> di bagian atas &lt;script&gt; dengan publishable key dari Supabase → Project Settings → API Keys.</p>
-      </div>`;
+  // ---------- modal ----------
+  function openModal(html, cls = "") {
+    const root = $("#modalRoot");
+    root.innerHTML = `<div class="modal" data-modal-bg><div class="sheet ${cls}" role="dialog" aria-modal="true"><button class="icon-btn close" data-modal-close aria-label="Tutup">✕</button>${html}</div></div>`;
+    document.body.style.overflow = "hidden";
+    return root.querySelector(".sheet");
+  }
+  function closeModal() { $("#modalRoot").innerHTML = ""; document.body.style.overflow = ""; }
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+  if (!DEMO && (!SUPABASE_KEY || !window.supabase)) {
+    document.querySelector("main").innerHTML = `<div class="panel" style="max-width:520px;margin:40px auto"><h2>Belum tersambung ke server</h2><p>Coba muat ulang halaman. Kalau masih begini, cek koneksi internet.</p></div>`;
     return;
   }
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const sb = DEMO ? window.createDemoClient() : window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  if (DEMO) {
+    $("#demoBar").hidden = false;
+    $("#realLogin").hidden = true;
+    $("#demoLogin").hidden = false;
+    $("#demoSample").hidden = false;
+    $("#logoutBtn").textContent = "Ganti peran";
+    $("#posterLink").href = "poster.html?demo";
+    // dari halaman produk: ?demo&view=owner / kasir → langsung masuk sebagai peran itu
+    const autoRole = params.get("view");
+    if (autoRole === "owner" || autoRole === "kasir") sb.auth.signInWithPassword({ email: autoRole + "@demo", password: "demo" });
+    $("#demoReset").addEventListener("click", () => { if (confirm("Balikin semua data demo ke awal?")) { window.resetDemo(); location.href = BASE + "?demo"; } });
+  }
+
+  // =========================================================
+  // Link masuk: ?card=<token> (buka kartu), ?scan=<ID> (QR kartu di-scan kamera HP)
+  // =========================================================
+  const linkToken = params.get("card");
+  if (linkToken) store.set(linkToken);
+  let pendingScan = params.get("scan") ? extractCode("?scan=" + params.get("scan")) : null;
+  const startView = pendingScan || params.get("view") === "owner" || params.get("view") === "kasir" ? "dashboard" : "customer";
+  if (linkToken || pendingScan || params.has("view")) history.replaceState(null, "", BASE + (DEMO ? "?demo" : ""));
 
   // =========================================================
   // Sisi pelanggan
   // =========================================================
-  const url = new URL(location.href);
-  const linkToken = url.searchParams.get("card");
-  if (linkToken) { store.set(linkToken); url.searchParams.delete("card"); history.replaceState(null, "", url); }
-
   let myCard = null, lastStampCount = null, lastCardToken = null;
 
   async function loadMyCard() {
@@ -590,22 +800,24 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
     const { data, error } = await sb.rpc("loyalty_get_card", { p_token: token });
     if (error) { if (!myCard) toast(errText(error)); return; }
     if (!data) { store.set(null); myCard = null; toast("Kartu nggak ketemu"); renderCard(); return; }
-    const wasStamps = myCard?.stamps;
+    const wasStamps = myCard?.token === data.token ? myCard.stamps : null;
     myCard = data;
     renderCard();
     if (wasStamps != null && data.stamps > wasStamps) toast(data.stamps >= data.target ? "Kartu penuh! Tukar hadiahmu di kasir" : "Yeay, +1 stempel!");
     if (wasStamps != null && data.stamps >= data.target && wasStamps < data.target) confetti();
+    if (wasStamps != null && data.stamps < wasStamps && data.redeemed > 0) toast("Hadiah ditukar. Selamat menikmati!");
   }
 
   function renderCard() {
     const has = !!myCard;
     $("#joinBox").hidden = has;
     $("#ownedBox").hidden = !has;
+    $("#qrActions").hidden = !has;
     const c = myCard || { name: "Calon Member", code: "—", stamps: 0, redeemed: 0, target: 10, store: "", reward: "" };
     const T = c.target;
     $("#hello").textContent = has ? "Halo, " + c.name.split(" ")[0] + "!" : "Kartu kamu belum ada";
-    $("#storeName").textContent = c.store || "Loyalty Card";
-    if (c.store) { $("#brandName").textContent = c.store; document.title = c.store + " · Kartu Loyalitas"; }
+    $("#storeName").textContent = c.store || "Kartu Member";
+    if (c.store) { $("#brandName").textContent = c.store; document.title = c.store + " · Kartu Member"; }
     $("#cardName").textContent = has ? c.name : "—";
     $("#cardId").textContent = c.code;
     $("#backCode").textContent = c.code;
@@ -630,10 +842,22 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
 
     const qr = $("#qr");
     if (qr.dataset.code !== c.code) {
-      qr.innerHTML = ""; qr.dataset.code = c.code;
-      if (has && window.QRCode) new QRCode(qr, { text: "LOYALTY:" + c.code, width: 256, height: 256, colorDark: "#1c1210", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+      qr.dataset.code = c.code;
+      if (has) drawQr(qr, scanUrl(c.code), 320); else qr.innerHTML = "";
     }
   }
+
+  function showBigQr() {
+    if (!myCard) return;
+    const sheet = openModal(`
+      <h3>${esc(myCard.name)}</h3>
+      <div style="color:var(--muted);font-size:13px">Tunjukin ke kasir buat dapat stempel</div>
+      <div class="qr-big" id="qrBig"></div>
+      <span class="code">${esc(myCard.code)}</span>
+      <p>Susah ke-scan? Naikin kecerahan layar, atau sebutin ID di atas ke kasir.</p>`, "qr-sheet");
+    drawQr(sheet.querySelector("#qrBig"), scanUrl(myCard.code), 560);
+  }
+  $("#showQr").addEventListener("click", showBigQr);
 
   $("#joinForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -645,9 +869,10 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
     $("#card").classList.remove("flipped"); renderCard();
     toast("Kartu jadi! Bonus 1 stempel buat member baru"); confetti();
   });
+  $("#demoSample").addEventListener("click", () => { store.set("demo-1"); loadMyCard(); });
   $("#copyMyLink").addEventListener("click", () => myCard && copy(cardLink(myCard.token), "Link kartu disalin"));
   $("#forgetCard").addEventListener("click", () => {
-    if (!confirm("Hapus kartu ini dari HP ini? Kamu masih bisa buka lagi pakai link-nya.")) return;
+    if (!confirm("Lepas kartu ini dari HP ini? Kamu masih bisa buka lagi pakai link-nya.")) return;
     store.set(null); myCard = null; renderCard();
   });
   $("#deleteMe").addEventListener("click", async () => {
@@ -659,35 +884,42 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
     toast("Kartu & datamu sudah dihapus");
   });
 
-  // update otomatis tiap 8 detik waktu pelanggan buka kartunya
   setInterval(() => {
     if (document.visibilityState === "visible" && !$("#view-customer").hidden && store.get()) loadMyCard();
   }, 8000);
 
   // =========================================================
-  // Sisi kasir & atasan
+  // Sisi kasir & owner
   // =========================================================
-  // Karyawan tokogue aktif = kasir (scan, pilih menu, stempel).
-  // Atasan = + daftar member, menu, aturan program.
   let isOwner = false, isManager = false;
   let members = [], settings = null, menu = [];
-  let scanned = null;            // kartu yang lagi dilayani (format loyalty_card_json)
-  const picks = new Map();       // menu_id -> qty
+  let scanned = null;
+  const picks = new Map();
+
+  function renderLoginNote() {
+    $("#loginNote").innerHTML = pendingScan
+      ? `<div class="notice" style="margin-bottom:16px">QR kartu <b>${esc(pendingScan)}</b> ke-scan. Kasir: masuk dulu buat kasih stempel. Pelanggan? Buka tab <b>Kartu Saya</b>.</div>`
+      : "";
+  }
 
   async function checkOwner(session) {
     const show = (id) => ["#loginBox", "#notOwnerBox", "#dashBox"].forEach((b) => ($(b).hidden = b !== id));
-    if (!session) { isOwner = isManager = false; scanned = null; picks.clear(); show("#loginBox"); return; }
+    if (!session) { isOwner = isManager = false; scanned = null; picks.clear(); renderLoginNote(); show("#loginBox"); return; }
     const [staff, mgr] = await Promise.all([sb.rpc("loyalty_is_staff"), sb.rpc("loyalty_is_manager")]);
     isOwner = !staff.error && staff.data === true;
     isManager = isOwner && !mgr.error && mgr.data === true;
     document.querySelectorAll("[data-mgr]").forEach((el) => (el.hidden = !isManager));
     $("#dashGrid").classList.toggle("solo", !isManager);
-    $("#dashTitle").textContent = isManager ? "Dashboard Loyalty" : "Kasir Loyalty";
+    $("#dashTitle").textContent = isManager ? "Dashboard Owner" : "Kasir";
     $("#dashSub").textContent = isManager
-      ? "Pantau member, atur menu, kasih stempel, tukar hadiah."
+      ? "Laporan pelanggan, member, menu & aturan program, plus layar kasir."
       : "Scan kartu pelanggan, pilih menu yang dipesan, kasih stempel.";
     show(isOwner ? "#dashBox" : "#notOwnerBox");
-    if (isOwner) loadDash();
+    if (isOwner) {
+      await loadDash();
+      if (pendingScan) { const code = pendingScan; pendingScan = null; lookup(code); }
+      if (isManager) loadReport();
+    }
   }
 
   async function loadDash() {
@@ -732,6 +964,7 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
     $("#sStore").value = settings.store;
     $("#sTarget").value = settings.target;
     $("#sReward").value = settings.reward;
+    $("#sCooldown").value = settings.stamp_cooldown_min ?? 30;
   }
 
   function renderRows() {
@@ -770,7 +1003,7 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
         <div class="menu-pick">${active.map((x) => {
           const q = picks.get(x.id) || 0;
           return `<button class="mchip${q ? " on" : ""}" data-menu="${x.id}">${esc(x.name)}${q ? `<b>${q}</b>` : ""}</button>`;
-        }).join("") || '<span style="color:var(--muted);font-size:13px">Belum ada menu. Atasan bisa nambah di Daftar menu.</span>'}</div>
+        }).join("") || '<span style="color:var(--muted);font-size:13px">Belum ada menu. Owner bisa nambah di Daftar menu.</span>'}</div>
         ${chosen.length ? `<div class="pick-sum">${chosen.map(([id, q]) => {
           const it = menu.find((x) => x.id === id);
           return `<span>${esc(it ? it.name : "?")} ×${q} <button class="linkish" data-menu-minus="${id}" aria-label="Kurangi">−</button></span>`;
@@ -787,6 +1020,15 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
     $("#scanPanel").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  async function lookup(code) {
+    const { data, error } = await sb.rpc("loyalty_lookup", { p_code: code });
+    if (error) return renderScan(errText(error));
+    if (!data) { scanned = null; return renderScan(`ID member ${code} nggak ketemu.`); }
+    $("#scanInput").value = "";
+    navigator.vibrate?.(60);
+    serve(data);
+  }
+
   let busy = false;
   async function ownerAction(fn, id) {
     if (busy) return; busy = true;
@@ -801,17 +1043,98 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
       else toast(`+1 stempel buat ${data.name}`);
     } else { toast("Hadiah ditukar, kartu mulai dari nol"); confetti(); }
     if (myCard && myCard.token === id) loadMyCard();
-    loadDash();
+    await loadDash();
+    if (isManager) loadReport();
   }
 
   async function toggleMenu(id, active) {
     const { data, error } = await sb.from("loyalty_menu").update({ active: !active }).eq("id", id).select();
-    if (error || !data?.length) return toast(error ? errText(error) : "Cuma atasan yang bisa ubah menu.");
+    if (error || !data?.length) return toast(error ? errText(error) : "Cuma owner yang bisa ubah menu.");
     picks.delete(id); loadDash();
   }
 
+  // ---------- laporan pelanggan (owner) ----------
+  const thisMonth = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); };
+  let repMonth = thisMonth(), report = null;
+
+  async function loadReport() {
+    if (!isManager) return;
+    $("#repMonth").textContent = monthLabel(repMonth);
+    $("#repNext").disabled = repMonth.getTime() >= thisMonth().getTime();
+    const { data, error } = await sb.rpc("loyalty_report", { p_month: ymd(repMonth) });
+    if (error) { $("#rRows").innerHTML = `<tr><td colspan="4" class="empty">${esc(errText(error))}</td></tr>`; return; }
+    report = data;
+    renderReport();
+  }
+
+  function renderReport() {
+    const r = report;
+    const isNow = repMonth.getTime() === thisMonth().getTime();
+    const avg = r.active_customers ? r.visits / r.active_customers : 0;
+    $("#rActive").textContent = r.active_customers;
+    $("#rActiveSub").textContent = `dari ${r.members_total} member`;
+    $("#rVisits").textContent = r.visits;
+    $("#rAvg").textContent = (avg >= 10 || Number.isInteger(avg) ? avg.toFixed(0) : avg.toFixed(1)) + "×";
+    $("#rNew").textContent = r.members_new;
+    $("#rNewSub").textContent = `${r.redeemed} hadiah ditukar`;
+    const max = r.top_menu[0]?.qty || 1;
+    $("#rTop").innerHTML = r.top_menu.length ? r.top_menu.map((m, i) => `
+      <li>
+        <div class="tm-row"><span class="tm-rank">${i + 1}</span><span class="tm-name">${esc(m.name)}</span><span class="tm-qty">${m.qty} porsi</span></div>
+        <div class="tm-bar"><i style="width:${(m.qty / max) * 100}%"></i></div>
+        <div class="tm-sub">dipesan ${m.customers} pelanggan</div>
+      </li>`).join("") : `<li style="color:var(--muted)">Belum ada pesanan tercatat ${isNow ? "bulan ini" : "di bulan ini"}. Menu dicatat kasir waktu ngasih stempel.</li>`;
+    renderReportRows();
+  }
+
+  function renderReportRows() {
+    if (!report) return;
+    const q = $("#rSearch").value.trim().toLowerCase();
+    const list = report.customers.filter((c) => !q || (c.name + c.phone + c.code).toLowerCase().includes(q));
+    $("#rRows").innerHTML = list.length ? list.map((c) => `
+      <tr class="click" data-customer="${c.id}" tabindex="0">
+        <td><div class="who"><span class="avatar">${esc(initials(c.name))}</span><div><b>${esc(c.name)}</b><small>${esc(c.phone)}</small></div></div></td>
+        <td><span class="visits-n${c.visits_month ? "" : " zero"}">${c.visits_month}×</span><div style="color:var(--muted);font-size:12px">${c.visits_total}× total</div></td>
+        <td class="col-hide">${c.favorite ? `<span class="fav">♥ ${esc(c.favorite)}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+        <td class="col-hide" style="color:var(--muted)">${ago(c.last_visit)}</td>
+      </tr>`).join("") : `<tr><td colspan="4" class="empty">${report.customers.length ? "Nggak ada yang cocok." : "Belum ada member."}</td></tr>`;
+  }
+
+  async function openCustomer(id) {
+    const { data: d, error } = await sb.rpc("loyalty_customer", { p_member: id });
+    if (error || !d) return toast(error ? errText(error) : "Pelanggan nggak ketemu");
+    const max = Math.max(1, ...d.monthly.map((m) => m.visits));
+    const thisM = d.monthly.at(-1)?.visits ?? 0;
+    openModal(`
+      <div class="det">
+        <div class="det-head">
+          <span class="avatar">${esc(initials(d.name))}</span>
+          <div><h3>${esc(d.name)}</h3><small>${esc(d.phone)} · ${esc(d.code)} · member sejak ${new Date(d.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</small></div>
+        </div>
+        <div class="det-stats">
+          <div><small>Datang bulan ini</small><b>${thisM}×</b></div>
+          <div><small>Stempel sekarang</small><b>${d.stamps}</b></div>
+          <div><small>Hadiah ditukar</small><b>${d.redeemed}×</b></div>
+        </div>
+        <h4>Kunjungan 6 bulan terakhir</h4>
+        <div class="bars">${d.monthly.map((m) => `
+          <div><b>${m.visits}</b><i style="height:${(m.visits / max) * 70}%"></i><span>${new Date(m.month + "T00:00:00").toLocaleDateString("id-ID", { month: "short" })}</span></div>`).join("")}
+        </div>
+        <h4>Menu favorit</h4>
+        <ul class="det-list">${d.favorites.map((f, i) => `<li><span style="flex:1;font-weight:${i ? 500 : 700}">${i === 0 ? "♥ " : ""}${esc(f.name)}</span><b>${f.qty} porsi</b><span style="color:var(--muted);font-size:12.5px">${f.visits}× pesan</span></li>`).join("") || '<li style="color:var(--muted)">Belum ada pesanan tercatat.</li>'}</ul>
+        <h4>Riwayat kunjungan</h4>
+        <ul class="det-list">${d.visits.map((v) => `<li><time>${fmtDateTime(v.created_at)}</time><span class="items">${v.items.map((it) => `<span>${esc(it.name)} ×${it.qty}</span>`).join("") || '<span style="background:none;color:var(--muted)">Menu nggak dicatat</span>'}</span></li>`).join("") || '<li style="color:var(--muted)">Belum pernah datang sejak daftar.</li>'}</ul>
+      </div>`);
+  }
+
+  $("#repPrev").addEventListener("click", () => { repMonth = new Date(repMonth.getFullYear(), repMonth.getMonth() - 1, 1); loadReport(); });
+  $("#repNext").addEventListener("click", () => { if (repMonth < thisMonth()) { repMonth = new Date(repMonth.getFullYear(), repMonth.getMonth() + 1, 1); loadReport(); } });
+  $("#rSearch").addEventListener("input", renderReportRows);
+
+  // ---------- klik ----------
   document.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-stamp],[data-redeem],[data-link],[data-logout],[data-serve],[data-menu],[data-menu-minus],[data-clear-picks],[data-close-scan],[data-menu-toggle]");
+    if (e.target.matches("[data-modal-bg]") || e.target.closest("[data-modal-close]")) return closeModal();
+    const b = e.target.closest("[data-stamp],[data-redeem],[data-link],[data-logout],[data-serve],[data-menu],[data-menu-minus],[data-clear-picks],[data-close-scan],[data-menu-toggle],[data-customer],[data-demo-login]");
     if (!b) return;
     const d = b.dataset;
     if (d.stamp) ownerAction("loyalty_add_stamp", d.stamp);
@@ -826,7 +1149,13 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
     else if ("clearPicks" in d) { picks.clear(); renderScan(); }
     else if ("closeScan" in d) { scanned = null; picks.clear(); renderScan(); }
     else if (d.menuToggle) toggleMenu(+d.menuToggle, d.active === "true");
+    else if (d.customer) openCustomer(d.customer);
+    else if (d.demoLogin) sb.auth.signInWithPassword({ email: d.demoLogin + "@demo", password: "demo" });
     else if ("logout" in d) { stopCam(); sb.auth.signOut(); }
+  });
+  document.addEventListener("keydown", (e) => {
+    const row = e.target.closest?.("[data-customer]");
+    if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openCustomer(row.dataset.customer); }
   });
 
   $("#loginForm").addEventListener("submit", async (e) => {
@@ -839,18 +1168,14 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
   });
   sb.auth.onAuthStateChange((_evt, session) => setTimeout(() => checkOwner(session), 0));
 
-  $("#scanForm").addEventListener("submit", async (e) => {
+  $("#scanForm").addEventListener("submit", (e) => {
     e.preventDefault();
-    const v = $("#scanInput").value.trim();
-    if (!v) return;
-    const { data, error } = await sb.rpc("loyalty_lookup", { p_code: v });
-    if (error) return renderScan(errText(error));
-    if (!data) { scanned = null; return renderScan("ID member nggak ketemu."); }
-    $("#scanInput").value = "";
-    serve(data);
+    const raw = $("#scanInput").value.trim();
+    if (!raw) return;
+    lookup(extractCode(raw) || raw.toUpperCase());
   });
   $("#search").addEventListener("input", renderRows);
-  $("#refreshBtn").addEventListener("click", () => loadDash().then(() => toast("Data terbaru dimuat")));
+  $("#refreshBtn").addEventListener("click", async () => { await loadDash(); if (isManager) await loadReport(); toast("Data terbaru dimuat"); });
   $("#menuForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = $("#menuInput").value.trim();
@@ -861,13 +1186,14 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
   });
   $("#settingsForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!isManager) return toast("Cuma atasan yang bisa ubah aturan program.");
+    if (!isManager) return toast("Cuma owner yang bisa ubah aturan program.");
     const target = Math.max(3, Math.min(15, parseInt($("#sTarget").value, 10) || 10));
+    const cooldown = Math.max(0, Math.min(240, parseInt($("#sCooldown").value, 10) || 0));
     const { data, error } = await sb.from("loyalty_settings").update({
-      store: $("#sStore").value.trim() || settings.store, target, reward: $("#sReward").value.trim() || settings.reward,
+      store: $("#sStore").value.trim() || settings.store, target, reward: $("#sReward").value.trim() || settings.reward, stamp_cooldown_min: cooldown,
     }).eq("id", 1).select();
     if (error) return toast(errText(error));
-    if (!data?.length) return toast("Gagal simpan: akun ini bukan atasan.");
+    if (!data?.length) return toast("Gagal simpan: akun ini bukan owner.");
     toast("Aturan program disimpan"); loadDash(); if (store.get()) loadMyCard();
   });
 
@@ -881,39 +1207,48 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
     card.querySelectorAll(".glare").forEach((g) => { g.style.setProperty("--gx", x * 100 + "%"); g.style.setProperty("--gy", y * 100 + "%"); });
   };
   scene.addEventListener("pointermove", (e) => {
-    if (e.pointerType === "touch") return;
+    if (e.pointerType === "touch" || card.classList.contains("flipped")) return;
     const r = scene.getBoundingClientRect();
     card.classList.add("tracking");
     setTilt((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
   });
   scene.addEventListener("pointerleave", () => { card.classList.remove("tracking"); setTilt(0.5, 0.5); });
-  const flip = () => { if (!myCard) return toast("Daftar dulu buat dapat QR code"); card.classList.remove("tracking"); card.classList.toggle("flipped"); };
+  const flip = () => {
+    if (!myCard) return toast("Daftar dulu buat dapat QR code");
+    card.classList.remove("tracking"); setTilt(0.5, 0.5); // QR harus lurus biar gampang di-scan
+    card.classList.toggle("flipped");
+  };
   card.addEventListener("click", flip);
   card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); } });
   window.addEventListener("deviceorientation", (e) => {
-    if (e.gamma == null) return;
-    setTilt(Math.max(0, Math.min(1, 0.5 + e.gamma / 60)), Math.max(0, Math.min(1, 0.5 + (e.beta - 45) / 60)));
+    if (e.gamma == null || card.classList.contains("flipped")) return;
+    setTilt(Math.max(0, Math.min(1, 0.5 + e.gamma / 90)), Math.max(0, Math.min(1, 0.5 + (e.beta - 45) / 90)));
   });
   setTimeout(() => { setTilt(0.75, 0.35); setTimeout(() => setTilt(0.5, 0.5), 600); }, 300);
 
   // =========================================================
-  // Tab & kamera
+  // Tab
   // =========================================================
-  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", x === t));
-    document.querySelectorAll(".view").forEach((v) => (v.hidden = v.id !== "view-" + t.dataset.view));
+  function showView(name) {
+    document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", x.dataset.view === name));
+    document.querySelectorAll(".view").forEach((v) => (v.hidden = v.id !== "view-" + name));
     stopCam();
-    if (t.dataset.view === "dashboard") loadDash(); else if (store.get()) loadMyCard();
-  }));
+    if (name === "dashboard") { loadDash(); if (isManager) loadReport(); } else if (store.get()) loadMyCard();
+  }
+  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showView(t.dataset.view)));
 
+  // =========================================================
+  // Scanner kamera
+  // BarcodeDetector (Chrome/Android) kalau ada, selain itu jsQR (iPhone/Safari).
+  // =========================================================
   let stream = null, raf = null;
   function stopCam() {
     if (stream) stream.getTracks().forEach((t) => t.stop());
     stream = null; cancelAnimationFrame(raf);
-    $("#camVideo").style.display = "none"; $("#camBtn").textContent = "Scan pakai kamera";
+    const v = $("#camVideo"); v.srcObject = null;
+    $("#camWrap").hidden = true;
+    $("#camBtn span").textContent = "Scan pakai kamera";
   }
-  // Pembaca QR: pakai BarcodeDetector bawaan (Chrome/Android) kalau ada,
-  // selain itu jsQR (iPhone/Safari, Firefox). Mengembalikan teks QR atau null.
   async function makeQrReader() {
     try {
       if ("BarcodeDetector" in window && (await BarcodeDetector.getSupportedFormats()).includes("qr_code")) {
@@ -924,55 +1259,66 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
     if (!window.jsQR) return null;
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    let invert = false;
     return async (v) => {
       const w = v.videoWidth, h = v.videoHeight;
       if (!w || !h) return [];
-      const scale = Math.min(1, 640 / Math.max(w, h));
-      canvas.width = Math.round(w * scale); canvas.height = Math.round(h * scale);
-      ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
-      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const hit = window.jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
+      // ambil kotak tengah (tempat bingkai), perkecil ke maks 720px biar cepat
+      const side = Math.min(w, h) * 0.9;
+      const sx = (w - side) / 2, sy = (h - side) / 2;
+      const out = Math.min(720, Math.round(side));
+      canvas.width = out; canvas.height = out;
+      ctx.drawImage(v, sx, sy, side, side, 0, 0, out, out);
+      const img = ctx.getImageData(0, 0, out, out);
+      invert = !invert; // gantian cek QR normal & terbalik
+      const hit = window.jsQR(img.data, out, out, { inversionAttempts: invert ? "attemptBoth" : "dontInvert" });
       return hit ? [hit.data] : [];
     };
   }
 
+  async function startCam() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+    } catch (e) {
+      stopCam();
+      return toast(e?.name === "NotAllowedError" ? "Izin kamera ditolak. Buka pengaturan browser → izinkan kamera buat situs ini." : "Kamera nggak bisa dibuka. Ketik ID member aja.");
+    }
+    const v = $("#camVideo");
+    v.setAttribute("playsinline", ""); v.muted = true;
+    v.srcObject = stream;
+    $("#camWrap").hidden = false;
+    $("#camBtn span").textContent = "Tutup kamera";
+    $("#camStatus").textContent = "Arahkan ke QR di kartu pelanggan";
+    try { await v.play(); } catch {}
+    const read = await makeQrReader();
+    if (!read) { stopCam(); return toast("Scanner belum siap. Muat ulang halaman, atau ketik ID member."); }
+    let last = 0;
+    const tick = async (t) => {
+      if (!stream) return;
+      if (t - last > 120) {
+        last = t;
+        try {
+          const texts = await read(v);
+          const code = texts.map(extractCode).find(Boolean);
+          if (code) { $("#camStatus").textContent = "Ketemu: " + code; stopCam(); lookup(code); return; }
+          if (texts.length) $("#camStatus").textContent = "Itu bukan QR kartu member";
+        } catch {}
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+  }
   if (navigator.mediaDevices?.getUserMedia) {
     $("#camBtn").hidden = false;
-    $("#camBtn").addEventListener("click", async () => {
-      if (stream) return stopCam();
-      try {
-        const read = await makeQrReader();
-        if (!read) return toast("Scanner belum siap. Ketik ID member aja dulu.");
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-        const v = $("#camVideo");
-        v.setAttribute("playsinline", ""); v.muted = true;
-        v.srcObject = stream; v.style.display = "block"; await v.play();
-        $("#camBtn").textContent = "Tutup kamera";
-        let last = 0;
-        const tick = async (t) => {
-          if (!stream) return;
-          if (t - last > 150) {
-            last = t;
-            try {
-              const hit = (await read(v)).find((x) => /^LOYALTY:/i.test(x));
-              if (hit) {
-                navigator.vibrate?.(60);
-                $("#scanInput").value = hit.slice(8); stopCam(); $("#scanForm").requestSubmit(); return;
-              }
-            } catch {}
-          }
-          raf = requestAnimationFrame(tick);
-        };
-        raf = requestAnimationFrame(tick);
-      } catch (e) {
-        stopCam();
-        toast(e?.name === "NotAllowedError" ? "Izin kamera ditolak. Aktifkan di pengaturan browser." : "Kamera nggak bisa dibuka");
-      }
-    });
+    $("#camBtn").addEventListener("click", () => (stream ? stopCam() : startCam()));
   }
 
   renderCard();
   loadMyCard();
+  if (startView === "dashboard") showView("dashboard");
 })();
 </script>
 </body>
