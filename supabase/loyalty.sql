@@ -6,9 +6,9 @@
 --
 -- Akses:
 --   • Pelanggan (tanpa login): daftar & lihat kartunya sendiri.
---   • Karyawan tokogue aktif (kasir): cari member by ID, pilih menu, kasih stempel, tukar hadiah.
---     Tidak bisa lihat daftar pelanggan / nomor HP.
---   • Atasan tokogue: lihat database pelanggan & laporan, atur menu & aturan program.
+--   • Atasan tokogue (aplikasi → Kartu Member & Pelanggan): scan QR, kasih stempel, tukar hadiah,
+--     lihat database pelanggan & laporan, atur menu & aturan program.
+--   • Karyawan & HR: tidak punya akses ke data member.
 
 -- =========================================================
 -- Tabel
@@ -87,6 +87,7 @@ create index if not exists loyalty_visit_items_menu_idx on public.loyalty_visit_
 
 drop function if exists public.loyalty_is_admin();
 
+-- Yang boleh scan & kasih stempel: cuma atasan aktif (lewat aplikasi tokogue → Kartu Member).
 create or replace function public.loyalty_is_staff()
 returns boolean
 language sql stable security definer
@@ -94,7 +95,7 @@ set search_path = ''
 as $$
   select exists (
     select 1 from public.profiles
-    where id = (select auth.uid()) and status = 'active'
+    where id = (select auth.uid()) and status = 'active' and role = 'atasan'
   );
 $$;
 

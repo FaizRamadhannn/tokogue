@@ -9,7 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" defer></script>
 <script src="demo.js"></script>
 <style>
   :root {
@@ -394,10 +393,6 @@
       <div class="brand-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff3dc"><path d="M15.5 2.5a6 6 0 0 1 3.2 11.1l-3.4 2.2-1.8 1.8a2.4 2.4 0 1 1-3.4 3.4 2.4 2.4 0 1 1-1.7-4.1 2.4 2.4 0 0 1 2-1.2l1.8-1.8 2.2-3.4A6 6 0 0 1 15.5 2.5Z"/></svg></div>
       <span class="brand-name" id="brandName">Kartu Member</span>
     </div>
-    <nav class="tabs" role="tablist">
-      <button class="tab" role="tab" aria-selected="true" data-view="customer">Kartu Saya</button>
-      <button class="tab" role="tab" aria-selected="false" data-view="dashboard">Kasir & Owner</button>
-    </nav>
   </div>
 </header>
 
@@ -490,160 +485,6 @@
     </div>
   </section>
 
-  <!-- ============ KASIR & OWNER ============ -->
-  <section class="view" id="view-dashboard" hidden>
-    <div id="loginBox" class="panel" style="max-width:420px;margin:24px auto">
-      <div id="loginNote"></div>
-      <div id="realLogin">
-        <h2>Masuk kasir / owner</h2>
-        <p>Pakai nomor HP & password akun tokogue. Kasir bisa kasih stempel; owner juga bisa lihat laporan pelanggan, atur menu & aturan program.</p>
-        <form id="loginForm">
-          <div class="field"><label for="lPhone">Nomor HP</label><input id="lPhone" required inputmode="tel" placeholder="08xx xxxx xxxx" autocomplete="username"></div>
-          <div class="field"><label for="lPass">Password</label><input id="lPass" type="password" required minlength="6" autocomplete="current-password"></div>
-          <button class="btn dark block" type="submit">Masuk</button>
-        </form>
-        <div id="loginMsg" style="margin-top:12px"></div>
-      </div>
-      <div id="demoLogin" class="demo-login" hidden>
-        <h2>Coba sebagai…</h2>
-        <p style="color:var(--muted);margin:0 0 6px;font-size:14px">Mode demo nggak butuh password.</p>
-        <button class="btn block" data-demo-login="kasir" type="button"><span>Kasir<small style="color:#ffe2df">Scan kartu, pilih menu, kasih stempel</small></span></button>
-        <button class="btn block dark" data-demo-login="owner" type="button"><span>Owner<small style="color:#d9cbc5">+ laporan pelanggan, menu, aturan program</small></span></button>
-      </div>
-    </div>
-
-    <div id="notOwnerBox" class="panel" style="max-width:400px;margin:24px auto" hidden>
-      <h2>Akun belum bisa dipakai</h2>
-      <p>Akun tokogue ini belum aktif (masih nunggu approval HR) atau sudah ditolak.</p>
-      <button class="btn block ghost" data-logout>Keluar</button>
-    </div>
-
-    <div id="dashBox" hidden>
-      <div class="dash-head">
-        <div>
-          <h1 id="dashTitle">Kasir</h1>
-          <p id="dashSub">Scan kartu pelanggan, pilih menu yang dipesan, kasih stempel.</p>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <a class="btn ghost" id="posterLink" href="poster.html" target="_blank" rel="noopener" data-mgr style="text-decoration:none">Poster QR</a>
-          <button class="btn ghost" id="refreshBtn">Muat ulang</button>
-          <button class="btn ghost" data-logout id="logoutBtn">Keluar</button>
-        </div>
-      </div>
-
-      <div class="kpis" data-mgr>
-        <div class="kpi"><small>Total member</small><b id="kMembers">0</b></div>
-        <div class="kpi"><small>Stempel hari ini</small><b id="kToday">0</b></div>
-        <div class="kpi"><small>Siap tukar hadiah</small><b id="kReady">0</b></div>
-        <div class="kpi"><small>Hadiah ditukar</small><b id="kRedeemed">0</b></div>
-      </div>
-
-      <div class="dash-grid" id="dashGrid">
-        <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
-          <div class="panel" id="scanPanel">
-            <h2>Scan kartu member</h2>
-            <p>Arahkan kamera ke QR di HP pelanggan, atau ketik ID member-nya.</p>
-            <button class="btn block" id="camBtn" type="button" hidden>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/></svg>
-              <span>Scan pakai kamera</span>
-            </button>
-            <div class="cam-wrap" id="camWrap" hidden>
-              <video id="camVideo" playsinline muted autoplay></video>
-              <div class="cam-frame"><i></i></div>
-              <div class="cam-status" id="camStatus">Arahkan ke QR di kartu pelanggan</div>
-            </div>
-            <form id="scanForm" style="display:flex;gap:8px;margin-top:10px">
-              <input class="search" id="scanInput" placeholder="ID member, cth. LC-7K2QX" style="flex:1;width:auto;max-width:none;text-transform:uppercase" autocomplete="off">
-              <button class="btn dark" type="submit">Cari</button>
-            </form>
-            <div class="scan-result" id="scanResult"></div>
-          </div>
-
-          <div class="panel" data-mgr>
-            <h2>Daftar menu</h2>
-            <p>Menu yang bisa dipilih kasir. Menu yang disembunyikan tetap tercatat di laporan.</p>
-            <form id="menuForm" style="display:flex;gap:8px;margin-bottom:12px">
-              <input class="search" id="menuInput" placeholder="Nama menu baru" maxlength="60" style="flex:1;width:auto;max-width:none" autocomplete="off">
-              <button class="btn dark" type="submit">Tambah</button>
-            </form>
-            <div class="menu-admin" id="menuAdmin"></div>
-          </div>
-
-          <div class="panel" data-mgr>
-            <h2>Aturan program</h2>
-            <p>Berlaku buat semua kartu.</p>
-            <form id="settingsForm">
-              <div class="field"><label for="sStore">Nama toko</label><input id="sStore" maxlength="60"></div>
-              <div class="field"><label for="sTarget">Stempel buat 1 hadiah</label><input id="sTarget" type="number" min="3" max="15"></div>
-              <div class="field"><label for="sReward">Hadiahnya</label><input id="sReward" maxlength="120"></div>
-              <div class="field"><label for="sCooldown">Jeda minimal antar stempel (menit)</label><input id="sCooldown" type="number" min="0" max="240"><small style="color:var(--muted);font-size:12px">Anti-curang: member yang sama nggak bisa dapat stempel lagi sebelum jeda ini lewat. 0 = tanpa jeda.</small></div>
-              <button class="btn block dark" type="submit">Simpan</button>
-            </form>
-          </div>
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:20px;min-width:0" data-mgr>
-          <div class="table-wrap">
-            <div class="table-tools">
-              <h2>Member</h2>
-              <input class="search" id="search" placeholder="Cari nama / ID / HP">
-            </div>
-            <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
-              <table>
-                <thead><tr><th>Member</th><th>Stempel</th><th class="col-hide">Terakhir datang</th><th></th></tr></thead>
-                <tbody id="rows"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="panel">
-            <h2>Aktivitas terbaru</h2>
-            <p style="margin-bottom:12px">Stempel, hadiah, dan member baru.</p>
-            <ul class="activity" id="activity"></ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- Laporan pelanggan (owner) -->
-      <div class="panel report" id="reportPanel" data-mgr>
-        <div class="rep-head">
-          <div>
-            <h2>Laporan pelanggan</h2>
-            <p style="margin:2px 0 0;color:var(--muted);font-size:14px">Menu terlaris & seberapa sering pelanggan datang.</p>
-          </div>
-          <div class="month-nav">
-            <button id="repPrev" type="button" aria-label="Bulan sebelumnya">‹</button>
-            <b id="repMonth">—</b>
-            <button id="repNext" type="button" aria-label="Bulan berikutnya">›</button>
-          </div>
-        </div>
-        <div class="rep-kpis">
-          <div class="rep-kpi"><small>Pelanggan datang</small><b id="rActive">0</b><em id="rActiveSub"></em></div>
-          <div class="rep-kpi"><small>Total kunjungan</small><b id="rVisits">0</b><em>stempel diberikan</em></div>
-          <div class="rep-kpi"><small>Rata-rata datang</small><b id="rAvg">0×</b><em>per pelanggan</em></div>
-          <div class="rep-kpi"><small>Member baru</small><b id="rNew">0</b><em id="rNewSub"></em></div>
-        </div>
-        <div class="rep-grid">
-          <div>
-            <h4 style="margin:0 0 12px;font-size:15px">Menu paling sering dipesan</h4>
-            <ul class="top-menu" id="rTop"></ul>
-          </div>
-          <div class="table-wrap">
-            <div class="table-tools">
-              <h2>Pelanggan</h2>
-              <input class="search" id="rSearch" placeholder="Cari nama / HP">
-            </div>
-            <div style="overflow-x:auto;max-height:440px;overflow-y:auto">
-              <table>
-                <thead><tr><th>Pelanggan</th><th>Datang</th><th class="col-hide">Menu favorit</th><th class="col-hide">Terakhir</th></tr></thead>
-                <tbody id="rRows"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 </main>
 
 <div id="modalRoot"></div>
@@ -683,23 +524,14 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
   const monthLabel = (d) => d.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
   const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
 
-  // Link di QR kartu: kalau di-scan kamera HP biasa, langsung buka layar kasir dengan member ini.
-  const scanUrl = (code) => BASE + (DEMO ? "?demo&scan=" : "?scan=") + encodeURIComponent(code);
   const cardLink = (token) => BASE + (DEMO ? "?demo&card=" : "?card=") + encodeURIComponent(token);
-  // Ambil ID member dari isi QR: link baru (?scan=), format lama (LOYALTY:), atau ID polos.
-  const extractCode = (text) => {
-    const t = String(text || "").trim();
-    const m = t.match(/[?&]scan=([A-Za-z0-9-]+)/) || t.match(/^LOYALTY:([A-Za-z0-9-]+)$/i) || t.match(/^(LC-[A-Za-z0-9]+)$/i);
-    return m ? decodeURIComponent(m[1]).toUpperCase() : null;
-  };
-
   let memToken = null;
   const store = {
     get: () => { try { return localStorage.getItem(TOKEN_KEY) || memToken; } catch { return memToken; } },
     set: (v) => { memToken = v || null; try { v ? localStorage.setItem(TOKEN_KEY, v) : localStorage.removeItem(TOKEN_KEY); } catch {} },
   };
   const ERR = {
-    phone_taken: "Nomor ini sudah terdaftar. Minta link kartumu ke kasir.",
+    phone_taken: "Nomor ini sudah terdaftar. Buka kartu lewat link yang kamu simpan, atau minta bantuan kasir.",
     consent_required: "Centang persetujuan dulu ya.",
     "Could not find the function": "Server belum diperbarui. Admin: jalankan ulang supabase/loyalty.sql (repo tokogue).",
     invalid_phone: "Nomor HP-nya belum bener.",
@@ -769,14 +601,6 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
 
   if (DEMO) {
     $("#demoBar").hidden = false;
-    $("#realLogin").hidden = true;
-    $("#demoLogin").hidden = false;
-    $("#demoSample").hidden = false;
-    $("#logoutBtn").textContent = "Ganti peran";
-    $("#posterLink").href = "poster.html?demo";
-    // dari halaman produk: ?demo&view=owner / kasir → langsung masuk sebagai peran itu
-    const autoRole = params.get("view");
-    if (autoRole === "owner" || autoRole === "kasir") sb.auth.signInWithPassword({ email: autoRole + "@demo", password: "demo" });
     $("#demoReset").addEventListener("click", () => { if (confirm("Balikin semua data demo ke awal?")) { window.resetDemo(); location.href = BASE + "?demo"; } });
   }
 
@@ -785,9 +609,10 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
   // =========================================================
   const linkToken = params.get("card");
   if (linkToken) store.set(linkToken);
-  let pendingScan = params.get("scan") ? extractCode("?scan=" + params.get("scan")) : null;
-  const startView = pendingScan || params.get("view") === "owner" || params.get("view") === "kasir" ? "dashboard" : "customer";
-  if (linkToken || pendingScan || params.has("view")) history.replaceState(null, "", BASE + (DEMO ? "?demo" : ""));
+  // Link QR versi lama (?scan=ID) — stempel sekarang dikasih lewat aplikasi tokogue.
+  const oldScan = params.has("scan");
+  if (linkToken || oldScan || params.has("view")) history.replaceState(null, "", BASE + (DEMO ? "?demo" : ""));
+  if (oldScan) setTimeout(() => toast("Stempel dikasih lewat aplikasi tokogue → menu Kartu Member."), 400);
 
   // =========================================================
   // Sisi pelanggan
@@ -843,7 +668,7 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
     const qr = $("#qr");
     if (qr.dataset.code !== c.code) {
       qr.dataset.code = c.code;
-      if (has) drawQr(qr, scanUrl(c.code), 320); else qr.innerHTML = "";
+      if (has) drawQr(qr, c.code, 320); else qr.innerHTML = "";
     }
   }
 
@@ -855,7 +680,7 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
       <div class="qr-big" id="qrBig"></div>
       <span class="code">${esc(myCard.code)}</span>
       <p>Susah ke-scan? Naikin kecerahan layar, atau sebutin ID di atas ke kasir.</p>`, "qr-sheet");
-    drawQr(sheet.querySelector("#qrBig"), scanUrl(myCard.code), 560);
+    drawQr(sheet.querySelector("#qrBig"), myCard.code, 560);
   }
   $("#showQr").addEventListener("click", showBigQr);
 
@@ -888,313 +713,8 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
     if (document.visibilityState === "visible" && !$("#view-customer").hidden && store.get()) loadMyCard();
   }, 8000);
 
-  // =========================================================
-  // Sisi kasir & owner
-  // =========================================================
-  let isOwner = false, isManager = false;
-  let members = [], settings = null, menu = [];
-  let scanned = null;
-  const picks = new Map();
-
-  function renderLoginNote() {
-    $("#loginNote").innerHTML = pendingScan
-      ? `<div class="notice" style="margin-bottom:16px">QR kartu <b>${esc(pendingScan)}</b> ke-scan. Kasir: masuk dulu buat kasih stempel. Pelanggan? Buka tab <b>Kartu Saya</b>.</div>`
-      : "";
-  }
-
-  async function checkOwner(session) {
-    const show = (id) => ["#loginBox", "#notOwnerBox", "#dashBox"].forEach((b) => ($(b).hidden = b !== id));
-    if (!session) { isOwner = isManager = false; scanned = null; picks.clear(); renderLoginNote(); show("#loginBox"); return; }
-    const [staff, mgr] = await Promise.all([sb.rpc("loyalty_is_staff"), sb.rpc("loyalty_is_manager")]);
-    isOwner = !staff.error && staff.data === true;
-    isManager = isOwner && !mgr.error && mgr.data === true;
-    document.querySelectorAll("[data-mgr]").forEach((el) => (el.hidden = !isManager));
-    $("#dashGrid").classList.toggle("solo", !isManager);
-    $("#dashTitle").textContent = isManager ? "Dashboard Owner" : "Kasir";
-    $("#dashSub").textContent = isManager
-      ? "Laporan pelanggan, member, menu & aturan program, plus layar kasir."
-      : "Scan kartu pelanggan, pilih menu yang dipesan, kasih stempel.";
-    show(isOwner ? "#dashBox" : "#notOwnerBox");
-    if (isOwner) {
-      await loadDash();
-      if (pendingScan) { const code = pendingScan; pendingScan = null; lookup(code); }
-      if (isManager) loadReport();
-    }
-  }
-
-  async function loadDash() {
-    if (!isOwner) return;
-    const base = await Promise.all([
-      sb.from("loyalty_settings").select("*").eq("id", 1).single(),
-      sb.from("loyalty_menu").select("id, name, active").order("name"),
-    ]);
-    const baseErr = base[0].error || base[1].error;
-    if (baseErr) return toast(errText(baseErr));
-    settings = base[0].data; menu = base[1].data;
-    $("#brandName").textContent = settings.store;
-
-    if (isManager) {
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      const [m, a, t] = await Promise.all([
-        sb.from("loyalty_members").select("id, code, name, phone, stamps, redeemed, last_visit").order("last_visit", { ascending: false }).limit(1000),
-        sb.from("loyalty_activity").select("note, created_at").order("created_at", { ascending: false }).limit(8),
-        sb.from("loyalty_activity").select("id", { count: "exact", head: true }).eq("kind", "stamp").gte("created_at", today.toISOString()),
-      ]);
-      const err = m.error || a.error || t.error;
-      if (err) return toast(errText(err));
-      members = m.data;
-      renderManager(a.data, t.count || 0);
-    }
-    renderScan();
-  }
-
-  function renderManager(activity, stampsToday) {
-    const T = settings.target;
-    $("#kMembers").textContent = members.length;
-    $("#kToday").textContent = stampsToday;
-    $("#kReady").textContent = members.filter((m) => m.stamps >= T).length;
-    $("#kRedeemed").textContent = members.reduce((n, m) => n + m.redeemed, 0);
-    renderRows();
-    $("#activity").innerHTML = activity.map((l) => `<li><time>${hhmm(l.created_at)}</time><span>${esc(l.note)}</span></li>`).join("") || '<li style="color:var(--muted)">Belum ada aktivitas.</li>';
-    $("#menuAdmin").innerHTML = menu.length ? menu.map((x) => `
-      <div class="menu-row${x.active ? "" : " off"}">
-        <span>${esc(x.name)}</span>
-        <button class="icon-btn" data-menu-toggle="${x.id}" data-active="${x.active}">${x.active ? "Sembunyikan" : "Tampilkan"}</button>
-      </div>`).join("") : '<p style="color:var(--muted);margin:0">Belum ada menu.</p>';
-    $("#sStore").value = settings.store;
-    $("#sTarget").value = settings.target;
-    $("#sReward").value = settings.reward;
-    $("#sCooldown").value = settings.stamp_cooldown_min ?? 30;
-  }
-
-  function renderRows() {
-    const T = settings.target;
-    const q = $("#search").value.trim().toLowerCase();
-    const list = members.filter((m) => !q || (m.name + m.code + m.phone).toLowerCase().includes(q));
-    $("#rows").innerHTML = list.length ? list.map((m) => `
-      <tr>
-        <td><div class="who"><span class="avatar">${esc(initials(m.name))}</span><div><b>${esc(m.name)}</b><small>${esc(m.code)}</small></div></div></td>
-        <td>${m.stamps >= T ? '<span class="ready">Siap tukar</span>' : `<span class="pill">${m.stamps}/${T}<span class="mbar"><i style="width:${(m.stamps / T) * 100}%"></i></span></span>`}</td>
-        <td class="col-hide" style="color:var(--muted)">${ago(m.last_visit)}</td>
-        <td><div class="actions">
-          <button class="icon-btn primary" data-serve="${m.id}">Layani</button>
-          <button class="icon-btn" data-link="${m.id}" title="Salin link kartu buat dikirim ke pelanggan">Link</button>
-        </div></td>
-      </tr>`).join("") : `<tr><td colspan="4" class="empty">${members.length ? "Nggak ada member yang cocok." : "Belum ada member. Minta pelanggan daftar di tab Kartu Saya."}</td></tr>`;
-  }
-
-  function renderScan(msg) {
-    const box = $("#scanResult");
-    if (msg) { box.innerHTML = `<div class="notice err">${esc(msg)}</div>`; return; }
-    if (!scanned || !settings) { box.innerHTML = ""; return; }
-    const m = scanned, T = settings.target, full = m.stamps >= T;
-    const active = menu.filter((x) => x.active);
-    const chosen = [...picks].filter(([, q]) => q > 0);
-    box.innerHTML = `
-      <div class="found">
-        <div class="found-top">
-          <span class="avatar">${esc(initials(m.name))}</span>
-          <div style="flex:1"><b>${esc(m.name)}</b><small>${esc(m.code)} · ${m.stamps}/${T} stempel</small></div>
-          <button class="icon-btn" data-close-scan aria-label="Tutup">✕</button>
-        </div>
-        <div class="mini-stamps">${Array.from({ length: T }, (_, i) => `<i class="${i < m.stamps ? "on" : ""}"></i>`).join("")}</div>
-        ${full ? '<div class="notice" style="margin-bottom:12px">Kartu penuh. Tukar hadiah dulu, baru bisa dapat stempel lagi.</div>' : `
-        <div class="pick-head"><b>Pesan apa?</b>${chosen.length ? '<button class="linkish" data-clear-picks>Kosongkan</button>' : "<span>Tap menu, tap lagi buat nambah</span>"}</div>
-        <div class="menu-pick">${active.map((x) => {
-          const q = picks.get(x.id) || 0;
-          return `<button class="mchip${q ? " on" : ""}" data-menu="${x.id}">${esc(x.name)}${q ? `<b>${q}</b>` : ""}</button>`;
-        }).join("") || '<span style="color:var(--muted);font-size:13px">Belum ada menu. Owner bisa nambah di Daftar menu.</span>'}</div>
-        ${chosen.length ? `<div class="pick-sum">${chosen.map(([id, q]) => {
-          const it = menu.find((x) => x.id === id);
-          return `<span>${esc(it ? it.name : "?")} ×${q} <button class="linkish" data-menu-minus="${id}" aria-label="Kurangi">−</button></span>`;
-        }).join("")}</div>` : ""}`}
-        <div class="row">
-          <button class="btn" data-stamp="${m.token}" ${full ? "disabled" : ""}>+1 Stempel${chosen.length ? "" : " (tanpa menu)"}</button>
-          <button class="btn gold" data-redeem="${m.token}" ${full ? "" : "disabled"}>Tukar hadiah</button>
-        </div>
-      </div>`;
-  }
-
-  function serve(card) {
-    scanned = card; picks.clear(); renderScan();
-    $("#scanPanel").scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  async function lookup(code) {
-    const { data, error } = await sb.rpc("loyalty_lookup", { p_code: code });
-    if (error) return renderScan(errText(error));
-    if (!data) { scanned = null; return renderScan(`ID member ${code} nggak ketemu.`); }
-    $("#scanInput").value = "";
-    navigator.vibrate?.(60);
-    serve(data);
-  }
-
-  let busy = false;
-  async function ownerAction(fn, id) {
-    if (busy) return; busy = true;
-    const params = { p_member: id };
-    if (fn === "loyalty_add_stamp") params.p_items = [...picks].filter(([, q]) => q > 0).map(([menu_id, qty]) => ({ menu_id, qty }));
-    const { data, error } = await sb.rpc(fn, params);
-    busy = false;
-    if (error) { toast(errText(error)); return loadDash(); }
-    scanned = data; picks.clear();
-    if (fn === "loyalty_add_stamp") {
-      if (data.stamps >= data.target) { toast(`${data.name} siap tukar hadiah!`); confetti(); }
-      else toast(`+1 stempel buat ${data.name}`);
-    } else { toast("Hadiah ditukar, kartu mulai dari nol"); confetti(); }
-    if (myCard && myCard.token === id) loadMyCard();
-    await loadDash();
-    if (isManager) loadReport();
-  }
-
-  async function toggleMenu(id, active) {
-    const { data, error } = await sb.from("loyalty_menu").update({ active: !active }).eq("id", id).select();
-    if (error || !data?.length) return toast(error ? errText(error) : "Cuma owner yang bisa ubah menu.");
-    picks.delete(id); loadDash();
-  }
-
-  // ---------- laporan pelanggan (owner) ----------
-  const thisMonth = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); };
-  let repMonth = thisMonth(), report = null;
-
-  async function loadReport() {
-    if (!isManager) return;
-    $("#repMonth").textContent = monthLabel(repMonth);
-    $("#repNext").disabled = repMonth.getTime() >= thisMonth().getTime();
-    const { data, error } = await sb.rpc("loyalty_report", { p_month: ymd(repMonth) });
-    if (error) { $("#rRows").innerHTML = `<tr><td colspan="4" class="empty">${esc(errText(error))}</td></tr>`; return; }
-    report = data;
-    renderReport();
-  }
-
-  function renderReport() {
-    const r = report;
-    const isNow = repMonth.getTime() === thisMonth().getTime();
-    const avg = r.active_customers ? r.visits / r.active_customers : 0;
-    $("#rActive").textContent = r.active_customers;
-    $("#rActiveSub").textContent = `dari ${r.members_total} member`;
-    $("#rVisits").textContent = r.visits;
-    $("#rAvg").textContent = (avg >= 10 || Number.isInteger(avg) ? avg.toFixed(0) : avg.toFixed(1)) + "×";
-    $("#rNew").textContent = r.members_new;
-    $("#rNewSub").textContent = `${r.redeemed} hadiah ditukar`;
-    const max = r.top_menu[0]?.qty || 1;
-    $("#rTop").innerHTML = r.top_menu.length ? r.top_menu.map((m, i) => `
-      <li>
-        <div class="tm-row"><span class="tm-rank">${i + 1}</span><span class="tm-name">${esc(m.name)}</span><span class="tm-qty">${m.qty} porsi</span></div>
-        <div class="tm-bar"><i style="width:${(m.qty / max) * 100}%"></i></div>
-        <div class="tm-sub">dipesan ${m.customers} pelanggan</div>
-      </li>`).join("") : `<li style="color:var(--muted)">Belum ada pesanan tercatat ${isNow ? "bulan ini" : "di bulan ini"}. Menu dicatat kasir waktu ngasih stempel.</li>`;
-    renderReportRows();
-  }
-
-  function renderReportRows() {
-    if (!report) return;
-    const q = $("#rSearch").value.trim().toLowerCase();
-    const list = report.customers.filter((c) => !q || (c.name + c.phone + c.code).toLowerCase().includes(q));
-    $("#rRows").innerHTML = list.length ? list.map((c) => `
-      <tr class="click" data-customer="${c.id}" tabindex="0">
-        <td><div class="who"><span class="avatar">${esc(initials(c.name))}</span><div><b>${esc(c.name)}</b><small>${esc(c.phone)}</small></div></div></td>
-        <td><span class="visits-n${c.visits_month ? "" : " zero"}">${c.visits_month}×</span><div style="color:var(--muted);font-size:12px">${c.visits_total}× total</div></td>
-        <td class="col-hide">${c.favorite ? `<span class="fav">♥ ${esc(c.favorite)}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
-        <td class="col-hide" style="color:var(--muted)">${ago(c.last_visit)}</td>
-      </tr>`).join("") : `<tr><td colspan="4" class="empty">${report.customers.length ? "Nggak ada yang cocok." : "Belum ada member."}</td></tr>`;
-  }
-
-  async function openCustomer(id) {
-    const { data: d, error } = await sb.rpc("loyalty_customer", { p_member: id });
-    if (error || !d) return toast(error ? errText(error) : "Pelanggan nggak ketemu");
-    const max = Math.max(1, ...d.monthly.map((m) => m.visits));
-    const thisM = d.monthly.at(-1)?.visits ?? 0;
-    openModal(`
-      <div class="det">
-        <div class="det-head">
-          <span class="avatar">${esc(initials(d.name))}</span>
-          <div><h3>${esc(d.name)}</h3><small>${esc(d.phone)} · ${esc(d.code)} · member sejak ${new Date(d.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</small></div>
-        </div>
-        <div class="det-stats">
-          <div><small>Datang bulan ini</small><b>${thisM}×</b></div>
-          <div><small>Stempel sekarang</small><b>${d.stamps}</b></div>
-          <div><small>Hadiah ditukar</small><b>${d.redeemed}×</b></div>
-        </div>
-        <h4>Kunjungan 6 bulan terakhir</h4>
-        <div class="bars">${d.monthly.map((m) => `
-          <div><b>${m.visits}</b><i style="height:${(m.visits / max) * 70}%"></i><span>${new Date(m.month + "T00:00:00").toLocaleDateString("id-ID", { month: "short" })}</span></div>`).join("")}
-        </div>
-        <h4>Menu favorit</h4>
-        <ul class="det-list">${d.favorites.map((f, i) => `<li><span style="flex:1;font-weight:${i ? 500 : 700}">${i === 0 ? "♥ " : ""}${esc(f.name)}</span><b>${f.qty} porsi</b><span style="color:var(--muted);font-size:12.5px">${f.visits}× pesan</span></li>`).join("") || '<li style="color:var(--muted)">Belum ada pesanan tercatat.</li>'}</ul>
-        <h4>Riwayat kunjungan</h4>
-        <ul class="det-list">${d.visits.map((v) => `<li><time>${fmtDateTime(v.created_at)}</time><span class="items">${v.items.map((it) => `<span>${esc(it.name)} ×${it.qty}</span>`).join("") || '<span style="background:none;color:var(--muted)">Menu nggak dicatat</span>'}</span></li>`).join("") || '<li style="color:var(--muted)">Belum pernah datang sejak daftar.</li>'}</ul>
-      </div>`);
-  }
-
-  $("#repPrev").addEventListener("click", () => { repMonth = new Date(repMonth.getFullYear(), repMonth.getMonth() - 1, 1); loadReport(); });
-  $("#repNext").addEventListener("click", () => { if (repMonth < thisMonth()) { repMonth = new Date(repMonth.getFullYear(), repMonth.getMonth() + 1, 1); loadReport(); } });
-  $("#rSearch").addEventListener("input", renderReportRows);
-
-  // ---------- klik ----------
   document.addEventListener("click", (e) => {
-    if (e.target.matches("[data-modal-bg]") || e.target.closest("[data-modal-close]")) return closeModal();
-    const b = e.target.closest("[data-stamp],[data-redeem],[data-link],[data-logout],[data-serve],[data-menu],[data-menu-minus],[data-clear-picks],[data-close-scan],[data-menu-toggle],[data-customer],[data-demo-login]");
-    if (!b) return;
-    const d = b.dataset;
-    if (d.stamp) ownerAction("loyalty_add_stamp", d.stamp);
-    else if (d.redeem) ownerAction("loyalty_redeem", d.redeem);
-    else if (d.link) copy(cardLink(d.link), "Link kartu disalin, kirim ke pelanggan via WA");
-    else if (d.serve) {
-      const m = members.find((x) => x.id === d.serve);
-      if (m) serve({ token: m.id, code: m.code, name: m.name, stamps: m.stamps, redeemed: m.redeemed, target: settings.target });
-    }
-    else if (d.menu) { const id = +d.menu; picks.set(id, Math.min(50, (picks.get(id) || 0) + 1)); renderScan(); }
-    else if (d.menuMinus) { const id = +d.menuMinus, q = (picks.get(id) || 0) - 1; q > 0 ? picks.set(id, q) : picks.delete(id); renderScan(); }
-    else if ("clearPicks" in d) { picks.clear(); renderScan(); }
-    else if ("closeScan" in d) { scanned = null; picks.clear(); renderScan(); }
-    else if (d.menuToggle) toggleMenu(+d.menuToggle, d.active === "true");
-    else if (d.customer) openCustomer(d.customer);
-    else if (d.demoLogin) sb.auth.signInWithPassword({ email: d.demoLogin + "@demo", password: "demo" });
-    else if ("logout" in d) { stopCam(); sb.auth.signOut(); }
-  });
-  document.addEventListener("keydown", (e) => {
-    const row = e.target.closest?.("[data-customer]");
-    if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openCustomer(row.dataset.customer); }
-  });
-
-  $("#loginForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    $("#loginMsg").innerHTML = "";
-    // Sama seperti tokogue_app: nomor HP diubah jadi email <angka>@tokogue.app
-    const email = $("#lPhone").value.replace(/\D/g, "") + "@tokogue.app";
-    const { error } = await sb.auth.signInWithPassword({ email, password: $("#lPass").value });
-    if (error) $("#loginMsg").innerHTML = `<div class="notice err">${esc(errText(error))}</div>`;
-  });
-  sb.auth.onAuthStateChange((_evt, session) => setTimeout(() => checkOwner(session), 0));
-
-  $("#scanForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const raw = $("#scanInput").value.trim();
-    if (!raw) return;
-    lookup(extractCode(raw) || raw.toUpperCase());
-  });
-  $("#search").addEventListener("input", renderRows);
-  $("#refreshBtn").addEventListener("click", async () => { await loadDash(); if (isManager) await loadReport(); toast("Data terbaru dimuat"); });
-  $("#menuForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = $("#menuInput").value.trim();
-    if (!name) return;
-    const { error } = await sb.from("loyalty_menu").insert({ name });
-    if (error) return toast(errText(error));
-    $("#menuInput").value = ""; toast("Menu ditambah"); loadDash();
-  });
-  $("#settingsForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!isManager) return toast("Cuma owner yang bisa ubah aturan program.");
-    const target = Math.max(3, Math.min(15, parseInt($("#sTarget").value, 10) || 10));
-    const cooldown = Math.max(0, Math.min(240, parseInt($("#sCooldown").value, 10) || 0));
-    const { data, error } = await sb.from("loyalty_settings").update({
-      store: $("#sStore").value.trim() || settings.store, target, reward: $("#sReward").value.trim() || settings.reward, stamp_cooldown_min: cooldown,
-    }).eq("id", 1).select();
-    if (error) return toast(errText(error));
-    if (!data?.length) return toast("Gagal simpan: akun ini bukan owner.");
-    toast("Aturan program disimpan"); loadDash(); if (store.get()) loadMyCard();
+    if (e.target.matches("[data-modal-bg]") || e.target.closest("[data-modal-close]")) closeModal();
   });
 
   // =========================================================
@@ -1226,99 +746,8 @@ const SUPABASE_KEY = "sb_publishable_U5HceSNvRDj79SWxYugpPg_UfRvCpnC"; // publis
   });
   setTimeout(() => { setTilt(0.75, 0.35); setTimeout(() => setTilt(0.5, 0.5), 600); }, 300);
 
-  // =========================================================
-  // Tab
-  // =========================================================
-  function showView(name) {
-    document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", x.dataset.view === name));
-    document.querySelectorAll(".view").forEach((v) => (v.hidden = v.id !== "view-" + name));
-    stopCam();
-    if (name === "dashboard") { loadDash(); if (isManager) loadReport(); } else if (store.get()) loadMyCard();
-  }
-  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showView(t.dataset.view)));
-
-  // =========================================================
-  // Scanner kamera
-  // BarcodeDetector (Chrome/Android) kalau ada, selain itu jsQR (iPhone/Safari).
-  // =========================================================
-  let stream = null, raf = null;
-  function stopCam() {
-    if (stream) stream.getTracks().forEach((t) => t.stop());
-    stream = null; cancelAnimationFrame(raf);
-    const v = $("#camVideo"); v.srcObject = null;
-    $("#camWrap").hidden = true;
-    $("#camBtn span").textContent = "Scan pakai kamera";
-  }
-  async function makeQrReader() {
-    try {
-      if ("BarcodeDetector" in window && (await BarcodeDetector.getSupportedFormats()).includes("qr_code")) {
-        const det = new BarcodeDetector({ formats: ["qr_code"] });
-        return async (v) => (await det.detect(v)).map((c) => c.rawValue);
-      }
-    } catch {}
-    if (!window.jsQR) return null;
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    let invert = false;
-    return async (v) => {
-      const w = v.videoWidth, h = v.videoHeight;
-      if (!w || !h) return [];
-      // ambil kotak tengah (tempat bingkai), perkecil ke maks 720px biar cepat
-      const side = Math.min(w, h) * 0.9;
-      const sx = (w - side) / 2, sy = (h - side) / 2;
-      const out = Math.min(720, Math.round(side));
-      canvas.width = out; canvas.height = out;
-      ctx.drawImage(v, sx, sy, side, side, 0, 0, out, out);
-      const img = ctx.getImageData(0, 0, out, out);
-      invert = !invert; // gantian cek QR normal & terbalik
-      const hit = window.jsQR(img.data, out, out, { inversionAttempts: invert ? "attemptBoth" : "dontInvert" });
-      return hit ? [hit.data] : [];
-    };
-  }
-
-  async function startCam() {
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false,
-      });
-    } catch (e) {
-      stopCam();
-      return toast(e?.name === "NotAllowedError" ? "Izin kamera ditolak. Buka pengaturan browser → izinkan kamera buat situs ini." : "Kamera nggak bisa dibuka. Ketik ID member aja.");
-    }
-    const v = $("#camVideo");
-    v.setAttribute("playsinline", ""); v.muted = true;
-    v.srcObject = stream;
-    $("#camWrap").hidden = false;
-    $("#camBtn span").textContent = "Tutup kamera";
-    $("#camStatus").textContent = "Arahkan ke QR di kartu pelanggan";
-    try { await v.play(); } catch {}
-    const read = await makeQrReader();
-    if (!read) { stopCam(); return toast("Scanner belum siap. Muat ulang halaman, atau ketik ID member."); }
-    let last = 0;
-    const tick = async (t) => {
-      if (!stream) return;
-      if (t - last > 120) {
-        last = t;
-        try {
-          const texts = await read(v);
-          const code = texts.map(extractCode).find(Boolean);
-          if (code) { $("#camStatus").textContent = "Ketemu: " + code; stopCam(); lookup(code); return; }
-          if (texts.length) $("#camStatus").textContent = "Itu bukan QR kartu member";
-        } catch {}
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-  }
-  if (navigator.mediaDevices?.getUserMedia) {
-    $("#camBtn").hidden = false;
-    $("#camBtn").addEventListener("click", () => (stream ? stopCam() : startCam()));
-  }
-
   renderCard();
   loadMyCard();
-  if (startView === "dashboard") showView("dashboard");
 })();
 </script>
 </body>

@@ -12,10 +12,10 @@ class MenuStat {
   final int customers;
 
   factory MenuStat.fromJson(Map<String, dynamic> j) => MenuStat(
-        name: j['name'] as String,
-        qty: (j['qty'] as num?)?.toInt() ?? 0,
-        customers: (j['customers'] as num?)?.toInt() ?? (j['visits'] as num?)?.toInt() ?? 0,
-      );
+    name: j['name'] as String,
+    qty: (j['qty'] as num?)?.toInt() ?? 0,
+    customers: (j['customers'] as num?)?.toInt() ?? (j['visits'] as num?)?.toInt() ?? 0,
+  );
 }
 
 class CustomerRow {
@@ -44,22 +44,21 @@ class CustomerRow {
   final DateTime? lastVisit;
   final String? favorite;
 
-  String get initials =>
-      name.trim().split(RegExp(r'\s+')).take(2).map((w) => w.isEmpty ? '' : w[0]).join().toUpperCase();
+  String get initials => name.trim().split(RegExp(r'\s+')).take(2).map((w) => w.isEmpty ? '' : w[0]).join().toUpperCase();
 
   factory CustomerRow.fromJson(Map<String, dynamic> j) => CustomerRow(
-        id: j['id'] as String,
-        code: j['code'] as String,
-        name: j['name'] as String,
-        phone: j['phone'] as String,
-        stamps: (j['stamps'] as num).toInt(),
-        redeemed: (j['redeemed'] as num).toInt(),
-        joinedAt: DateTime.parse(j['created_at'] as String).toLocal(),
-        visitsMonth: (j['visits_month'] as num?)?.toInt() ?? 0,
-        visitsTotal: (j['visits_total'] as num?)?.toInt() ?? 0,
-        lastVisit: j['last_visit'] == null ? null : DateTime.parse(j['last_visit'] as String).toLocal(),
-        favorite: j['favorite'] as String?,
-      );
+    id: j['id'] as String,
+    code: j['code'] as String,
+    name: j['name'] as String,
+    phone: j['phone'] as String,
+    stamps: (j['stamps'] as num).toInt(),
+    redeemed: (j['redeemed'] as num).toInt(),
+    joinedAt: DateTime.parse(j['created_at'] as String).toLocal(),
+    visitsMonth: (j['visits_month'] as num?)?.toInt() ?? 0,
+    visitsTotal: (j['visits_total'] as num?)?.toInt() ?? 0,
+    lastVisit: j['last_visit'] == null ? null : DateTime.parse(j['last_visit'] as String).toLocal(),
+    favorite: j['favorite'] as String?,
+  );
 }
 
 class CustomerReport {
@@ -86,15 +85,15 @@ class CustomerReport {
   double get avgVisits => activeCustomers == 0 ? 0 : visits / activeCustomers;
 
   factory CustomerReport.fromJson(Map<String, dynamic> j) => CustomerReport(
-        month: DateTime.parse(j['month'] as String),
-        membersTotal: (j['members_total'] as num).toInt(),
-        membersNew: (j['members_new'] as num).toInt(),
-        visits: (j['visits'] as num).toInt(),
-        activeCustomers: (j['active_customers'] as num).toInt(),
-        redeemed: (j['redeemed'] as num).toInt(),
-        topMenu: [for (final m in (j['top_menu'] as List? ?? [])) MenuStat.fromJson(Map<String, dynamic>.from(m as Map))],
-        customers: [for (final c in (j['customers'] as List? ?? [])) CustomerRow.fromJson(Map<String, dynamic>.from(c as Map))],
-      );
+    month: DateTime.parse(j['month'] as String),
+    membersTotal: (j['members_total'] as num).toInt(),
+    membersNew: (j['members_new'] as num).toInt(),
+    visits: (j['visits'] as num).toInt(),
+    activeCustomers: (j['active_customers'] as num).toInt(),
+    redeemed: (j['redeemed'] as num).toInt(),
+    topMenu: [for (final m in (j['top_menu'] as List? ?? [])) MenuStat.fromJson(Map<String, dynamic>.from(m as Map))],
+    customers: [for (final c in (j['customers'] as List? ?? [])) CustomerRow.fromJson(Map<String, dynamic>.from(c as Map))],
+  );
 }
 
 class VisitItem {
@@ -134,32 +133,175 @@ class CustomerDetail {
   final List<Visit> visits; // 30 kunjungan terakhir
 
   factory CustomerDetail.fromJson(Map<String, dynamic> j) => CustomerDetail(
-        id: j['id'] as String,
-        code: j['code'] as String,
-        name: j['name'] as String,
-        phone: j['phone'] as String,
-        stamps: (j['stamps'] as num).toInt(),
-        redeemed: (j['redeemed'] as num).toInt(),
-        joinedAt: DateTime.parse(j['created_at'] as String).toLocal(),
-        favorites: [for (final m in (j['favorites'] as List? ?? [])) MenuStat.fromJson(Map<String, dynamic>.from(m as Map))],
-        monthly: [
-          for (final m in (j['monthly'] as List? ?? []))
-            (DateTime.parse((m as Map)['month'] as String), (m['visits'] as num).toInt()),
-        ],
-        visits: [
-          for (final v in (j['visits'] as List? ?? []))
-            Visit(
-              DateTime.parse((v as Map)['created_at'] as String).toLocal(),
-              [for (final i in (v['items'] as List? ?? [])) VisitItem((i as Map)['name'] as String, (i['qty'] as num).toInt())],
-            ),
-        ],
-      );
+    id: j['id'] as String,
+    code: j['code'] as String,
+    name: j['name'] as String,
+    phone: j['phone'] as String,
+    stamps: (j['stamps'] as num).toInt(),
+    redeemed: (j['redeemed'] as num).toInt(),
+    joinedAt: DateTime.parse(j['created_at'] as String).toLocal(),
+    favorites: [for (final m in (j['favorites'] as List? ?? [])) MenuStat.fromJson(Map<String, dynamic>.from(m as Map))],
+    monthly: [
+      for (final m in (j['monthly'] as List? ?? []))
+        (DateTime.parse((m as Map)['month'] as String), (m['visits'] as num).toInt()),
+    ],
+    visits: [
+      for (final v in (j['visits'] as List? ?? []))
+        Visit(DateTime.parse((v as Map)['created_at'] as String).toLocal(), [
+          for (final i in (v['items'] as List? ?? [])) VisitItem((i as Map)['name'] as String, (i['qty'] as num).toInt()),
+        ]),
+    ],
+  );
 }
+
+/// Kartu member hasil scan (tanpa nomor HP).
+class MemberCard {
+  const MemberCard({
+    required this.id,
+    required this.code,
+    required this.name,
+    required this.stamps,
+    required this.target,
+    required this.redeemed,
+    required this.reward,
+  });
+  final String id;
+  final String code;
+  final String name;
+  final int stamps;
+  final int target;
+  final int redeemed;
+  final String reward;
+
+  bool get full => stamps >= target;
+
+  factory MemberCard.fromJson(Map<String, dynamic> j) => MemberCard(
+    id: j['token'] as String,
+    code: j['code'] as String,
+    name: j['name'] as String,
+    stamps: (j['stamps'] as num).toInt(),
+    target: (j['target'] as num).toInt(),
+    redeemed: (j['redeemed'] as num?)?.toInt() ?? 0,
+    reward: j['reward'] as String? ?? '',
+  );
+}
+
+class MenuItem {
+  const MenuItem({required this.id, required this.name, required this.active});
+  final int id;
+  final String name;
+  final bool active;
+
+  factory MenuItem.fromJson(Map<String, dynamic> j) =>
+      MenuItem(id: (j['id'] as num).toInt(), name: j['name'] as String, active: j['active'] as bool? ?? true);
+}
+
+class LoyaltySettings {
+  const LoyaltySettings({required this.store, required this.target, required this.reward, required this.cooldownMin});
+  final String store;
+  final int target;
+  final String reward;
+  final int cooldownMin;
+
+  factory LoyaltySettings.fromJson(Map<String, dynamic> j) => LoyaltySettings(
+    store: j['store'] as String,
+    target: (j['target'] as num).toInt(),
+    reward: j['reward'] as String,
+    cooldownMin: (j['stamp_cooldown_min'] as num?)?.toInt() ?? 0,
+  );
+}
+
+/// Ambil kode member (LC-XXXXX) dari isi QR: kode polos, `LOYALTY:LC-...`,
+/// atau link lama `.../kartu/?scan=LC-...`.
+String? extractMemberCode(String raw) {
+  final t = raw.trim();
+  final fromLink = RegExp(r'[?&]scan=([^&#\s]+)').firstMatch(t);
+  final text = fromLink != null ? Uri.decodeComponent(fromLink.group(1)!) : t;
+  final m = RegExp(r'LC-[A-Z0-9]{3,10}', caseSensitive: false).firstMatch(text);
+  return m?.group(0)?.toUpperCase();
+}
+
+/// Link halaman kartu pelanggan (dipakai untuk poster QR).
+const loyaltyWebBase = 'https://tokogue-sigma.vercel.app/kartu/';
 
 /// Ambil data dari server, atau data contoh kalau app jalan di mode demo.
 class LoyaltyRepo {
   LoyaltyRepo(this.backend);
   final Backend? backend;
+
+  Future<MemberCard?> lookup(String code) async {
+    final b = backend;
+    if (b == null) return _Demo.lookup(code);
+    final res = await b.rpc('loyalty_lookup', {'p_code': code});
+    if (res == null) return null;
+    return MemberCard.fromJson(Map<String, dynamic>.from(res as Map));
+  }
+
+  /// items: menu_id → qty
+  Future<MemberCard> addStamp(String memberId, Map<int, int> items) async {
+    final b = backend;
+    if (b == null) return _Demo.addStamp(memberId, items);
+    final res = await b.rpc('loyalty_add_stamp', {
+      'p_member': memberId,
+      'p_items': [
+        for (final e in items.entries)
+          if (e.value > 0) {'menu_id': e.key, 'qty': e.value},
+      ],
+    });
+    return MemberCard.fromJson(Map<String, dynamic>.from(res as Map));
+  }
+
+  Future<MemberCard> redeem(String memberId) async {
+    final b = backend;
+    if (b == null) return _Demo.redeem(memberId);
+    final res = await b.rpc('loyalty_redeem', {'p_member': memberId});
+    return MemberCard.fromJson(Map<String, dynamic>.from(res as Map));
+  }
+
+  Future<List<MenuItem>> menu({bool includeInactive = false}) async {
+    final b = backend;
+    if (b == null) {
+      return [
+        for (final m in _Demo.menuItems)
+          if (includeInactive || m.active) m,
+      ];
+    }
+    var q = b.db.from('loyalty_menu').select('id, name, active');
+    if (!includeInactive) q = q.eq('active', true);
+    final rows = await q.order('name');
+    return [for (final r in rows) MenuItem.fromJson(r)];
+  }
+
+  Future<void> addMenu(String name) async {
+    final b = backend;
+    if (b == null) return _Demo.addMenu(name);
+    await b.db.from('loyalty_menu').insert({'name': name.trim()});
+  }
+
+  Future<void> setMenuActive(int id, bool active) async {
+    final b = backend;
+    if (b == null) return _Demo.setMenuActive(id, active);
+    await b.db.from('loyalty_menu').update({'active': active}).eq('id', id);
+  }
+
+  Future<LoyaltySettings> settings() async {
+    final b = backend;
+    if (b == null) return _Demo.settings;
+    final r = await b.db.from('loyalty_settings').select('store, target, reward, stamp_cooldown_min').eq('id', 1).single();
+    return LoyaltySettings.fromJson(r);
+  }
+
+  Future<void> saveSettings(LoyaltySettings s) async {
+    final b = backend;
+    if (b == null) {
+      _Demo.settings = s;
+      return;
+    }
+    await b.db
+        .from('loyalty_settings')
+        .update({'store': s.store.trim(), 'target': s.target, 'reward': s.reward.trim(), 'stamp_cooldown_min': s.cooldownMin})
+        .eq('id', 1);
+  }
 
   Future<CustomerReport> report(DateTime month) async {
     final b = backend;
@@ -184,6 +326,65 @@ String _two(int n) => n.toString().padLeft(2, '0');
 // Data contoh (mode demo)
 // ---------------------------------------------------------------------------
 class _Demo {
+  static LoyaltySettings settings = const LoyaltySettings(
+    store: 'Ayam Garing Juara',
+    target: 10,
+    reward: '1 Paket Ayam Geprek + Es Teh',
+    cooldownMin: 0,
+  );
+  static final menuItems = <MenuItem>[for (final (i, n) in _menu.indexed) MenuItem(id: i + 1, name: n, active: true)];
+  static final _stamps = <int, int>{};
+  static final _redeemed = <int, int>{};
+
+  static int? _index(String idOrCode) {
+    final c = idOrCode.toUpperCase();
+    final m = RegExp(r'^(?:DEMO-|LC-DEM)(\d+)X?$').firstMatch(c);
+    final i = m == null ? null : int.tryParse(m.group(1)!);
+    return i != null && i >= 0 && i < _people.length ? i : null;
+  }
+
+  static MemberCard _card(int i) {
+    final all = _visitsOf(i).length;
+    return MemberCard(
+      id: 'demo-$i',
+      code: 'LC-DEM${i}X',
+      name: _people[i].$1,
+      stamps: _stamps[i] ?? all % settings.target,
+      target: settings.target,
+      redeemed: _redeemed[i] ?? all ~/ settings.target,
+      reward: settings.reward,
+    );
+  }
+
+  static MemberCard? lookup(String code) {
+    final i = _index(code);
+    return i == null ? null : _card(i);
+  }
+
+  static MemberCard addStamp(String id, Map<int, int> items) {
+    final i = _index(id)!;
+    final c = _card(i);
+    if (c.full) throw Exception('card_full_or_missing');
+    _stamps[i] = c.stamps + 1;
+    return _card(i);
+  }
+
+  static MemberCard redeem(String id) {
+    final i = _index(id)!;
+    final c = _card(i);
+    if (!c.full) throw Exception('not_ready');
+    _stamps[i] = 0;
+    _redeemed[i] = c.redeemed + 1;
+    return _card(i);
+  }
+
+  static void addMenu(String name) => menuItems.add(MenuItem(id: menuItems.length + 1, name: name.trim(), active: true));
+
+  static void setMenuActive(int id, bool active) {
+    final k = menuItems.indexWhere((m) => m.id == id);
+    if (k >= 0) menuItems[k] = MenuItem(id: id, name: menuItems[k].name, active: active);
+  }
+
   static const _menu = ['Ayam Geprek', 'Ayam Goreng Original', 'Ayam Crispy', 'Nasi Putih', 'Es Teh', 'Es Jeruk', 'Ayam Bakar'];
   static const _people = [
     ('Rina Putri', '081234567788'),
@@ -241,23 +442,27 @@ class _Demo {
         }
       }
       final fav = favCount.entries.isEmpty ? null : (favCount.entries.toList()..sort((a, b) => b.value - a.value)).first.key;
-      rows.add(CustomerRow(
-        id: 'demo-$i',
-        code: 'LC-DEM${i}X',
-        name: _people[i].$1,
-        phone: _people[i].$2,
-        stamps: all.length % 10,
-        redeemed: all.length ~/ 10,
-        joinedAt: now.subtract(Duration(days: 30 + i * 21)),
-        visitsMonth: inMonth.length,
-        visitsTotal: all.length,
-        lastVisit: all.isEmpty ? null : all.first.at,
-        favorite: fav,
-      ));
+      rows.add(
+        CustomerRow(
+          id: 'demo-$i',
+          code: 'LC-DEM${i}X',
+          name: _people[i].$1,
+          phone: _people[i].$2,
+          stamps: all.length % 10,
+          redeemed: all.length ~/ 10,
+          joinedAt: now.subtract(Duration(days: 30 + i * 21)),
+          visitsMonth: inMonth.length,
+          visitsTotal: all.length,
+          lastVisit: all.isEmpty ? null : all.first.at,
+          favorite: fav,
+        ),
+      );
     }
-    rows.sort((a, b) => b.visitsMonth != a.visitsMonth
-        ? b.visitsMonth - a.visitsMonth
-        : (b.lastVisit ?? DateTime(2000)).compareTo(a.lastVisit ?? DateTime(2000)));
+    rows.sort(
+      (a, b) => b.visitsMonth != a.visitsMonth
+          ? b.visitsMonth - a.visitsMonth
+          : (b.lastVisit ?? DateTime(2000)).compareTo(a.lastVisit ?? DateTime(2000)),
+    );
     final top = menuQty.entries.map((e) => MenuStat(name: e.key, qty: e.value, customers: menuPeople[e.key]!.length)).toList()
       ..sort((a, b) => b.qty - a.qty);
     return CustomerReport(

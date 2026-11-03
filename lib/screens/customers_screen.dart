@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/app_state.dart';
@@ -311,6 +312,16 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             ]),
           ),
         ]),
+      ),
+      const SizedBox(height: 10),
+      OutlinedButton.icon(
+        onPressed: () {
+          Clipboard.setData(ClipboardData(text: '$loyaltyWebBase?card=${Uri.encodeComponent(d.id)}'));
+          showSnack(context, 'Link kartu ${d.name} disalin. Kirim lewat WA kalau dia ganti HP.');
+        },
+        icon: const Icon(Icons.link_rounded),
+        label: const Text('Salin link kartu'),
+        style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
       ),
       const SizedBox(height: 10),
       Row(children: [
