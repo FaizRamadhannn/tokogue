@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../widgets/common.dart';
 import 'announcements_screen.dart';
 import 'attendance_screen.dart';
+import 'customers_screen.dart';
 import 'leave_screen.dart';
 import 'recap_screen.dart';
 import 'stock_screen.dart';
@@ -44,6 +45,7 @@ class HomeScreen extends StatelessWidget {
         ServiceTile(icon: Icons.how_to_reg_rounded, label: 'Approval', color: AppColors.orange, soft: AppColors.orangeSoft, badge: approvals, onTap: () => _push(context, const LeaveScreen(initialTab: 1))),
         ServiceTile(icon: Icons.inventory_2_rounded, label: 'Stok Bahan', color: AppColors.pink, soft: AppColors.pinkSoft, badge: lowStock.length, onTap: () => _push(context, const StockScreen())),
         ServiceTile(icon: Icons.groups_rounded, label: 'Absen Tim', color: AppColors.purple, soft: AppColors.purpleSoft, onTap: () => _push(context, const RecapScreen())),
+        ServiceTile(icon: Icons.loyalty_rounded, label: 'Pelanggan', color: AppColors.primary, soft: AppColors.primarySoft, onTap: () => _push(context, const CustomersScreen())),
       ],
       if (me.role == Role.hr) ...[
         ServiceTile(icon: Icons.how_to_reg_rounded, label: 'Approval', color: AppColors.orange, soft: AppColors.orangeSoft, badge: approvals, onTap: () => _push(context, const LeaveScreen(initialTab: 1))),
