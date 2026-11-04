@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../theme.dart';
 import 'backend.dart';
+import 'loyalty.dart';
 import 'format.dart';
 import 'models.dart';
 
@@ -38,6 +39,9 @@ class AppState extends ChangeNotifier {
 
   Employee? me;
   bool loading = false;
+
+  /// Boleh buka Kartu Member (scan & kasih stempel): atasan, atau karyawan yang diizinkan atasan.
+  bool canStamp = false;
   int _seq = 100;
   String _id(String p) => '$p${_seq++}';
 
@@ -61,6 +65,11 @@ class AppState extends ChangeNotifier {
     _replace(announcements, s.announcements);
     _replace(notifications, s.notifications);
     if (s.meRow != null) me = Backend.employeeFrom(s.meRow!);
+    try {
+      canStamp = await LoyaltyRepo(b).canStamp();
+    } catch (_) {
+      canStamp = me?.role == Role.atasan; // fitur loyalty belum dipasang di server
+    }
     notifyListeners();
   }
 
@@ -131,6 +140,7 @@ class AppState extends ChangeNotifier {
 
   void loginAs(Employee e) {
     me = e;
+    canStamp = e.role == Role.atasan || demoStampStaff.contains(e.id);
     notifyListeners();
   }
 

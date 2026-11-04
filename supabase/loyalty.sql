@@ -7,8 +7,10 @@
 -- Akses:
 --   • Pelanggan (tanpa login): daftar & lihat kartunya sendiri.
 --   • Atasan tokogue (aplikasi → Kartu Member & Pelanggan): scan QR, kasih stempel, tukar hadiah,
---     lihat database pelanggan & laporan, atur menu & aturan program.
---   • Karyawan & HR: tidak punya akses ke data member.
+--     lihat database pelanggan & laporan, atur menu & aturan program, atur siapa yang boleh kasih stempel.
+--   • Karyawan yang diizinkan atasan (mis. kasir): cuma scan, kasih stempel, tukar hadiah.
+--     Tidak bisa lihat nomor HP, daftar pelanggan, laporan, atau pengaturan.
+--   • Karyawan lain & HR: tidak punya akses ke data member.
 
 -- =========================================================
 -- Tabel
@@ -85,17 +87,28 @@ create index if not exists loyalty_visit_items_menu_idx on public.loyalty_visit_
 -- Siapa staf / atasan (pakai akun tokogue)
 -- =========================================================
 
+-- Karyawan yang diizinkan atasan untuk scan & kasih stempel (mis. kasir).
+create table if not exists public.loyalty_staff (
+  profile_id uuid primary key references public.profiles (id) on delete cascade,
+  granted_by uuid references auth.users (id) on delete set null,
+  created_at timestamptz not null default now()
+);
+-- siapa yang menukar hadiah (untuk laporan per staf)
+alter table public.loyalty_activity add column if not exists staff_id uuid references auth.users (id) on delete set null;
+
 drop function if exists public.loyalty_is_admin();
 
--- Yang boleh scan & kasih stempel: cuma atasan aktif (lewat aplikasi tokogue → Kartu Member).
+-- Yang boleh scan & kasih stempel (aplikasi tokogue → Kartu Member):
+-- atasan aktif, atau karyawan aktif yang diizinkan atasan (tabel loyalty_staff).
 create or replace function public.loyalty_is_staff()
 returns boolean
 language sql stable security definer
 set search_path = ''
 as $$
   select exists (
-    select 1 from public.profiles
-    where id = (select auth.uid()) and status = 'active' and role = 'atasan'
+    select 1 from public.profiles p
+    where p.id = (select auth.uid()) and p.status = 'active'
+      and (p.role = 'atasan' or exists (select 1 from public.loyalty_staff s where s.profile_id = p.id))
   );
 $$;
 
@@ -119,6 +132,9 @@ alter table public.loyalty_activity    enable row level security;
 alter table public.loyalty_menu        enable row level security;
 alter table public.loyalty_visits      enable row level security;
 alter table public.loyalty_visit_items enable row level security;
+alter table public.loyalty_staff       enable row level security;
+-- izin staf cuma diubah lewat fungsi loyalty_set_staff (atasan)
+revoke all on public.loyalty_staff from anon, authenticated;
 
 revoke all on public.loyalty_members, public.loyalty_activity, public.loyalty_menu,
               public.loyalty_visits, public.loyalty_visit_items from anon;
@@ -303,6 +319,10 @@ begin
    where mn.id is null
       or coalesce((e ->> 'qty')::int, 0) not between 1 and 50;
   if v_bad > 0 then raise exception 'invalid_items'; end if;
+  -- kalau toko punya menu aktif, minimal 1 menu wajib dipilih (biar laporan menu akurat)
+  if jsonb_array_length(coalesce(p_items, '[]'::jsonb)) = 0 and exists (select 1 from public.loyalty_menu where active) then
+    raise exception 'items_required';
+  end if;
 
   select target, stamp_cooldown_min into v_target, v_cooldown from public.loyalty_settings where id = 1;
 
@@ -328,8 +348,8 @@ begin
     from jsonb_array_elements(coalesce(p_items, '[]'::jsonb)) e
    group by (e ->> 'menu_id')::bigint;
 
-  insert into public.loyalty_activity (member_id, kind, note)
-  values (m.id, 'stamp', m.name || ' dapat stempel ke-' || m.stamps);
+  insert into public.loyalty_activity (member_id, kind, note, staff_id)
+  values (m.id, 'stamp', m.name || ' dapat stempel ke-' || m.stamps, (select auth.uid()));
   return public.loyalty_card_json(m);
 end;
 $$;
@@ -354,8 +374,8 @@ begin
   returning * into m;
   if m.id is null then raise exception 'not_ready'; end if;
 
-  insert into public.loyalty_activity (member_id, kind, note)
-  values (m.id, 'redeem', m.name || ' tukar hadiah: ' || s.reward);
+  insert into public.loyalty_activity (member_id, kind, note, staff_id)
+  values (m.id, 'redeem', m.name || ' tukar hadiah: ' || s.reward, (select auth.uid()));
   return public.loyalty_card_json(m);
 end;
 $$;
@@ -404,6 +424,21 @@ begin
          order by qty desc, mn.name
          limit 10
       ) t), '[]'::json),
+    'staff', coalesce((
+      select json_agg(st) from (
+        select coalesce(p.name, '(akun dihapus)') as name,
+               count(*) filter (where x.k = 'stamp')::int as stamps,
+               count(*) filter (where x.k = 'redeem')::int as redeems
+          from (
+            select staff_id, 'stamp' as k from v
+            union all
+            select staff_id, 'redeem' from public.loyalty_activity
+             where kind = 'redeem' and created_at >= v_from and created_at < v_to
+          ) x
+          left join public.profiles p on p.id = x.staff_id
+         group by x.staff_id, p.name
+         order by stamps desc, redeems desc, name
+      ) st), '[]'::json),
     'customers', coalesce((
       select json_agg(c) from (
         select mb.id, mb.code, mb.name, mb.phone, mb.stamps, mb.redeemed, mb.created_at,
@@ -463,6 +498,7 @@ begin
     'visits', coalesce((
       select json_agg(vv) from (
         select x.created_at,
+               (select p.name from public.profiles p where p.id = x.staff_id) as staff,
                coalesce((select json_agg(json_build_object('name', mn.name, 'qty', i.qty) order by mn.name)
                            from public.loyalty_visit_items i
                            join public.loyalty_menu mn on mn.id = i.menu_id
@@ -480,6 +516,46 @@ begin
 end;
 $$;
 
+-- Atasan: daftar karyawan aktif + apakah boleh kasih stempel
+create or replace function public.loyalty_staff_list()
+returns json
+language plpgsql stable security definer
+set search_path = ''
+as $$
+begin
+  if not public.loyalty_is_manager() then raise exception 'not_manager'; end if;
+  return coalesce((
+    select json_agg(json_build_object(
+             'id', p.id, 'name', p.name, 'position', p.position, 'role', p.role,
+             'allowed', s.profile_id is not null) order by p.name)
+      from public.profiles p
+      left join public.loyalty_staff s on s.profile_id = p.id
+     where p.status = 'active' and p.role <> 'atasan'
+  ), '[]'::json);
+end;
+$$;
+
+-- Atasan: izinkan / cabut izin kasih stempel untuk 1 karyawan
+create or replace function public.loyalty_set_staff(p_profile uuid, p_allowed boolean)
+returns boolean
+language plpgsql security definer
+set search_path = ''
+as $$
+begin
+  if not public.loyalty_is_manager() then raise exception 'not_manager'; end if;
+  if coalesce(p_allowed, false) then
+    if not exists (select 1 from public.profiles where id = p_profile and status = 'active' and role <> 'atasan') then
+      raise exception 'invalid_staff';
+    end if;
+    insert into public.loyalty_staff (profile_id, granted_by) values (p_profile, (select auth.uid()))
+    on conflict (profile_id) do nothing;
+  else
+    delete from public.loyalty_staff where profile_id = p_profile;
+  end if;
+  return coalesce(p_allowed, false);
+end;
+$$;
+
 -- Hak akses fungsi
 revoke execute on function
   public.loyalty_is_staff(), public.loyalty_is_manager(), public.loyalty_gen_code(),
@@ -487,7 +563,8 @@ revoke execute on function
   public.loyalty_delete_me(uuid),
   public.loyalty_get_card(uuid), public.loyalty_lookup(text),
   public.loyalty_add_stamp(uuid, jsonb), public.loyalty_redeem(uuid),
-  public.loyalty_report(date), public.loyalty_customer(uuid)
+  public.loyalty_report(date), public.loyalty_customer(uuid),
+  public.loyalty_staff_list(), public.loyalty_set_staff(uuid, boolean)
 from public, anon, authenticated;
 grant execute on function public.loyalty_join(text, text, boolean) to anon, authenticated;
 grant execute on function public.loyalty_delete_me(uuid)           to anon, authenticated;
@@ -499,3 +576,5 @@ grant execute on function public.loyalty_add_stamp(uuid, jsonb)    to authentica
 grant execute on function public.loyalty_redeem(uuid)              to authenticated;
 grant execute on function public.loyalty_report(date)              to authenticated;
 grant execute on function public.loyalty_customer(uuid)            to authenticated;
+grant execute on function public.loyalty_staff_list()             to authenticated;
+grant execute on function public.loyalty_set_staff(uuid, boolean) to authenticated;

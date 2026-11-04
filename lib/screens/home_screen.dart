@@ -55,6 +55,8 @@ class HomeScreen extends StatelessWidget {
         ServiceTile(icon: Icons.person_add_alt_1_rounded, label: 'Akun Baru', color: AppColors.teal, soft: AppColors.tealSoft, badge: state.pendingAccounts.length, onTap: () => _push(context, const AccountApprovalScreen())),
         ServiceTile(icon: Icons.beach_access_rounded, label: 'Cuti & Izin', color: AppColors.pink, soft: AppColors.pinkSoft, onTap: () => _push(context, const LeaveScreen())),
       ],
+      if (me.role != Role.atasan && state.canStamp)
+        ServiceTile(icon: Icons.qr_code_scanner_rounded, label: 'Kartu Member', color: AppColors.primary, soft: AppColors.primarySoft, onTap: () => _push(context, const MemberScanScreen())),
       ServiceTile(icon: Icons.campaign_rounded, label: 'Pengumuman', color: AppColors.blue, soft: AppColors.blueSoft, badge: state.announcements.where((a) => !a.readBy.contains(me.id)).length, onTap: () => _push(context, const AnnouncementsScreen())),
       ServiceTile(icon: Icons.receipt_long_rounded, label: 'Slip Gaji', color: AppColors.muted, soft: AppColors.bg, onTap: () => showSnack(context, 'Slip gaji hadir di fase 2.')),
     ];

@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'backend.dart';
+import 'models.dart';
 
 /// Data pelanggan dari program loyalty card (tabel loyalty_* di Supabase).
 /// Cuma atasan yang boleh baca — dicek lagi di server (loyalty_report / loyalty_customer).
@@ -15,6 +16,36 @@ class MenuStat {
     name: j['name'] as String,
     qty: (j['qty'] as num?)?.toInt() ?? 0,
     customers: (j['customers'] as num?)?.toInt() ?? (j['visits'] as num?)?.toInt() ?? 0,
+  );
+}
+
+/// Jumlah stempel & tukar hadiah yang dikasih 1 staf dalam sebulan.
+class StaffStat {
+  const StaffStat({required this.name, required this.stamps, required this.redeems});
+  final String name;
+  final int stamps;
+  final int redeems;
+
+  factory StaffStat.fromJson(Map<String, dynamic> j) => StaffStat(
+    name: j['name'] as String? ?? '-',
+    stamps: (j['stamps'] as num?)?.toInt() ?? 0,
+    redeems: (j['redeems'] as num?)?.toInt() ?? 0,
+  );
+}
+
+/// Karyawan (bukan atasan) + apakah atasan mengizinkan dia kasih stempel.
+class StaffMember {
+  const StaffMember({required this.id, required this.name, required this.position, required this.allowed});
+  final String id;
+  final String name;
+  final String position;
+  final bool allowed;
+
+  factory StaffMember.fromJson(Map<String, dynamic> j) => StaffMember(
+    id: j['id'] as String,
+    name: j['name'] as String,
+    position: j['position'] as String? ?? '-',
+    allowed: j['allowed'] as bool? ?? false,
   );
 }
 
@@ -71,6 +102,7 @@ class CustomerReport {
     required this.redeemed,
     required this.topMenu,
     required this.customers,
+    this.staff = const [],
   });
   final DateTime month;
   final int membersTotal;
@@ -80,6 +112,7 @@ class CustomerReport {
   final int redeemed;
   final List<MenuStat> topMenu;
   final List<CustomerRow> customers;
+  final List<StaffStat> staff;
 
   /// Rata-rata kunjungan per pelanggan yang datang bulan ini.
   double get avgVisits => activeCustomers == 0 ? 0 : visits / activeCustomers;
@@ -93,6 +126,7 @@ class CustomerReport {
     redeemed: (j['redeemed'] as num).toInt(),
     topMenu: [for (final m in (j['top_menu'] as List? ?? [])) MenuStat.fromJson(Map<String, dynamic>.from(m as Map))],
     customers: [for (final c in (j['customers'] as List? ?? [])) CustomerRow.fromJson(Map<String, dynamic>.from(c as Map))],
+    staff: [for (final x in (j['staff'] as List? ?? [])) StaffStat.fromJson(Map<String, dynamic>.from(x as Map))],
   );
 }
 
@@ -103,9 +137,10 @@ class VisitItem {
 }
 
 class Visit {
-  const Visit(this.at, this.items);
+  const Visit(this.at, this.items, {this.staff});
   final DateTime at;
   final List<VisitItem> items;
+  final String? staff; // siapa yang ngasih stempel
 }
 
 class CustomerDetail {
@@ -149,7 +184,7 @@ class CustomerDetail {
       for (final v in (j['visits'] as List? ?? []))
         Visit(DateTime.parse((v as Map)['created_at'] as String).toLocal(), [
           for (final i in (v['items'] as List? ?? [])) VisitItem((i as Map)['name'] as String, (i['qty'] as num).toInt()),
-        ]),
+        ], staff: v['staff'] as String?),
     ],
   );
 }
@@ -284,6 +319,36 @@ class LoyaltyRepo {
     await b.db.from('loyalty_menu').update({'active': active}).eq('id', id);
   }
 
+  /// Apakah akun yang login boleh scan & kasih stempel.
+  Future<bool> canStamp() async {
+    final b = backend;
+    if (b == null) return false;
+    return (await b.rpc('loyalty_is_staff')) == true;
+  }
+
+  /// Karyawan non-atasan + izin kasih stempelnya (khusus atasan).
+  Future<List<StaffMember>> staffList({List<Employee> demoEmployees = const []}) async {
+    final b = backend;
+    if (b == null) {
+      return [
+        for (final e in demoEmployees)
+          if (e.role != Role.atasan)
+            StaffMember(id: e.id, name: e.name, position: e.position, allowed: demoStampStaff.contains(e.id)),
+      ];
+    }
+    final res = await b.rpc('loyalty_staff_list');
+    return [for (final r in (res as List? ?? [])) StaffMember.fromJson(Map<String, dynamic>.from(r as Map))];
+  }
+
+  Future<void> setStaff(String profileId, bool allowed) async {
+    final b = backend;
+    if (b == null) {
+      allowed ? demoStampStaff.add(profileId) : demoStampStaff.remove(profileId);
+      return;
+    }
+    await b.rpc('loyalty_set_staff', {'p_profile': profileId, 'p_allowed': allowed});
+  }
+
   Future<LoyaltySettings> settings() async {
     final b = backend;
     if (b == null) return _Demo.settings;
@@ -319,6 +384,9 @@ class LoyaltyRepo {
     return CustomerDetail.fromJson(Map<String, dynamic>.from(res as Map));
   }
 }
+
+/// Mode demo: karyawan yang diizinkan kasih stempel (awalnya Sari si kasir).
+final demoStampStaff = <String>{'e2'};
 
 String _two(int n) => n.toString().padLeft(2, '0');
 
@@ -362,6 +430,7 @@ class _Demo {
   }
 
   static MemberCard addStamp(String id, Map<int, int> items) {
+    if (items.values.every((q) => q <= 0) && menuItems.any((m) => m.active)) throw Exception('items_required');
     final i = _index(id)!;
     final c = _card(i);
     if (c.full) throw Exception('card_full_or_missing');
@@ -412,7 +481,11 @@ class _Demo {
         final extra = _menu[r.nextInt(_menu.length)];
         items[extra] = (items[extra] ?? 0) + 1;
       }
-      out.add(Visit(at, [for (final e in items.entries) VisitItem(e.key, e.value)]));
+      out.add(
+        Visit(at, [
+          for (final e in items.entries) VisitItem(e.key, e.value),
+        ], staff: r.nextDouble() < 0.6 ? 'Sari Wulandari' : 'Dimas Aditya'),
+      );
     }
     return out;
   }
@@ -473,6 +546,10 @@ class _Demo {
       activeCustomers: rows.where((r) => r.visitsMonth > 0).length,
       redeemed: _inMonth(now, month) ? 3 : 1,
       topMenu: top.take(10).toList(),
+      staff: [
+        StaffStat(name: 'Sari Wulandari', stamps: (visits * 0.6).round(), redeems: _inMonth(now, month) ? 2 : 1),
+        StaffStat(name: 'Dimas Aditya', stamps: visits - (visits * 0.6).round(), redeems: _inMonth(now, month) ? 1 : 0),
+      ],
       customers: rows,
     );
   }

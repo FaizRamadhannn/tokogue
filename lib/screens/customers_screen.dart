@@ -179,6 +179,25 @@ class _CustomersScreenState extends State<CustomersScreen> {
             ]),
           ),
 
+        const _Heading('Stempel per staf'),
+        if (r.staff.isEmpty)
+          _Muted('Belum ada stempel $inLabel.')
+        else
+          CardBox(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+            child: Column(children: [
+              for (final st in r.staff)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  child: Row(children: [
+                    Expanded(child: Text(st.name, style: const TextStyle(fontWeight: FontWeight.w700))),
+                    Text('${st.stamps} stempel', style: const TextStyle(fontWeight: FontWeight.w800)),
+                    if (st.redeems > 0) Text(' · ${st.redeems} tukar', style: const TextStyle(color: AppColors.muted)),
+                  ]),
+                ),
+            ]),
+          ),
+
         _Heading('Daftar pelanggan', subtitle: '${r.customers.length} member · urut ${_sortLabel(_sort)}'),
         TextField(
           onChanged: (v) => setState(() => _query = v.trim()),
@@ -407,6 +426,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(fmtDayMonth(v.at), style: const TextStyle(fontWeight: FontWeight.w800)),
                     Text(fmtTime(v.at), style: const TextStyle(color: AppColors.muted, fontSize: 12.5)),
+                    if (v.staff != null)
+                      Text('oleh ${v.staff!.split(' ').first}',
+                          maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
                   ]),
                 ),
                 Expanded(

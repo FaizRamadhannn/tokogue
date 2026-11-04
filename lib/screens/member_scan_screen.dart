@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import '../data/app_state.dart';
 import '../data/backend.dart';
 import '../data/loyalty.dart';
+import '../data/models.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import 'loyalty_settings_screen.dart';
@@ -149,18 +150,21 @@ class _MemberScanScreenState extends State<MemberScanScreen> {
   @override
   Widget build(BuildContext context) {
     final m = _member;
+    final isManager = AppScope.of(context).me?.role == Role.atasan;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kartu Member'),
         actions: [
-          IconButton(
-            tooltip: 'Atur program & menu',
-            icon: const Icon(Icons.tune_rounded),
-            onPressed: () async {
-              await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LoyaltySettingsScreen()));
-              _loadMenu();
-            },
-          ),
+          // Pengaturan program cuma untuk atasan; kasir cuma scan & kasih stempel.
+          if (isManager)
+            IconButton(
+              tooltip: 'Atur program & menu',
+              icon: const Icon(Icons.tune_rounded),
+              onPressed: () async {
+                await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LoyaltySettingsScreen()));
+                _loadMenu();
+              },
+            ),
         ],
       ),
       body: AnimatedSwitcher(duration: Motion.medium, child: m == null ? _scanView() : _memberView(m)),
@@ -271,18 +275,28 @@ class _MemberScanScreenState extends State<MemberScanScreen> {
               const Expanded(
                 child: Text('Menu yang dibeli', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
               ),
-              Text(picked == 0 ? 'opsional' : '$picked item', style: const TextStyle(color: AppColors.muted)),
+              Text(
+                picked == 0 ? (_menu.isEmpty ? 'opsional' : 'pilih minimal 1') : '$picked item',
+                style: TextStyle(
+                  color: picked == 0 && _menu.isNotEmpty ? AppColors.primary : AppColors.muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
           if (_menu.isEmpty)
-            const Text('Belum ada menu. Tambahkan lewat tombol atur di kanan atas.', style: TextStyle(color: AppColors.muted))
+            const Text(
+              'Belum ada menu. Atasan bisa menambahkannya lewat tombol atur di kanan atas.',
+              style: TextStyle(color: AppColors.muted),
+            )
           else
             for (final item in _menu)
               _MenuRow(item: item, qty: _qty[item.id] ?? 0, onChanged: (q) => setState(() => _qty[item.id] = q)),
           const SizedBox(height: 16),
           FilledButton.icon(
-            onPressed: _busy ? null : _stamp,
+            // Menu wajib dipilih kalau toko punya menu, biar laporan menu terlaris akurat.
+            onPressed: _busy || (_menu.isNotEmpty && picked == 0) ? null : _stamp,
             icon: _busy
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                 : const Icon(Icons.verified_rounded),
@@ -474,6 +488,7 @@ String loyaltyErrorText(Object e) {
   if (msg.contains('not_staff') || msg.contains('not_manager')) return 'Fitur ini khusus atasan.';
   if (msg.contains('card_full_or_missing')) return 'Kartu sudah penuh. Tukar hadiah dulu.';
   if (msg.contains('not_ready')) return 'Stempel belum cukup untuk tukar hadiah.';
+  if (msg.contains('items_required')) return 'Pilih minimal 1 menu yang dibeli.';
   if (msg.contains('invalid_items')) return 'Ada menu yang tidak valid. Muat ulang layar ini.';
   if (msg.contains('PGRST202') || msg.contains('Could not find the function')) {
     return 'Fitur kartu member belum dipasang di server. Admin: jalankan supabase/loyalty.sql di Supabase.';

@@ -22,6 +22,7 @@ class _LoyaltySettingsScreenState extends State<LoyaltySettingsScreen> {
   int _target = 10;
   int _cooldown = 30;
   List<MenuItem> _menu = const [];
+  List<StaffMember> _staff = const [];
   bool _loading = true;
   bool _saving = false;
   String? _error;
@@ -45,9 +46,12 @@ class _LoyaltySettingsScreenState extends State<LoyaltySettingsScreen> {
   }
 
   Future<void> _load() async {
+    final repo = _repo;
+    final demoEmployees = AppScope.read(context).employees;
     try {
-      final s = await _repo.settings();
-      final m = await _repo.menu(includeInactive: true);
+      final s = await repo.settings();
+      final m = await repo.menu(includeInactive: true);
+      final staff = await repo.staffList(demoEmployees: demoEmployees);
       if (!mounted) return;
       setState(() {
         _store.text = s.store;
@@ -55,6 +59,7 @@ class _LoyaltySettingsScreenState extends State<LoyaltySettingsScreen> {
         _target = s.target;
         _cooldown = _cooldownOptions.contains(s.cooldownMin) ? s.cooldownMin : 30;
         _menu = m;
+        _staff = staff;
         _loading = false;
         _error = null;
       });
@@ -109,6 +114,20 @@ class _LoyaltySettingsScreenState extends State<LoyaltySettingsScreen> {
       await _repo.setMenuActive(item.id, active);
       final m = await _repo.menu(includeInactive: true);
       if (mounted) setState(() => _menu = m);
+    } catch (e) {
+      if (mounted) showSnack(context, loyaltyErrorText(e), error: true);
+    }
+  }
+
+  Future<void> _toggleStaff(StaffMember m, bool allowed) async {
+    final repo = _repo;
+    final demoEmployees = AppScope.read(context).employees;
+    try {
+      await repo.setStaff(m.id, allowed);
+      final staff = await repo.staffList(demoEmployees: demoEmployees);
+      if (!mounted) return;
+      setState(() => _staff = staff);
+      showSnack(context, allowed ? '${m.name} sekarang bisa kasih stempel.' : 'Izin kasih stempel ${m.name} dicabut.');
     } catch (e) {
       if (mounted) showSnack(context, loyaltyErrorText(e), error: true);
     }
@@ -296,6 +315,31 @@ class _LoyaltySettingsScreenState extends State<LoyaltySettingsScreen> {
                     activeTrackColor: AppColors.primary,
                     onChanged: (v) => _toggle(item, v),
                   ),
+                const SizedBox(height: 28),
+                const Text('Yang boleh kasih stempel', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 4),
+                const Text(
+                  'Atasan selalu bisa. Karyawan yang dinyalakan di sini (mis. kasir) cuma bisa scan, kasih stempel & tukar hadiah. '
+                  'Nomor HP pelanggan, laporan, dan pengaturan tetap khusus atasan.',
+                  style: TextStyle(color: AppColors.muted, height: 1.4),
+                ),
+                const SizedBox(height: 6),
+                if (_staff.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Text('Belum ada karyawan aktif.', style: TextStyle(color: AppColors.muted)),
+                  )
+                else
+                  for (final m in _staff)
+                    SwitchListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                      title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(m.position, style: const TextStyle(color: AppColors.muted)),
+                      value: m.allowed,
+                      activeThumbColor: Colors.white,
+                      activeTrackColor: AppColors.primary,
+                      onChanged: (v) => _toggleStaff(m, v),
+                    ),
               ],
             ),
     );
